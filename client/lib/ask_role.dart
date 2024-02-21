@@ -1,3 +1,4 @@
+import 'package:attendance/student/presentation/screens/student_sign_in.dart';
 import 'package:attendance/teacher/presentation/screens/teacher_sign_in.dart';
 import 'package:flutter/material.dart';
 import 'assets/constants/colors.dart';
@@ -56,7 +57,9 @@ class AskRole extends StatelessWidget {
               width: MediaQuery.of(context).size.width * 0.6,
               height: 50,
               child: ElevatedButton(
-                onPressed: (){},
+                onPressed: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>StudentSignIn()));
+                },
                 style: ButtonStyle(
                   backgroundColor: MaterialStateColor.resolveWith((states) => Colors.white),
                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)))),
