@@ -13,7 +13,7 @@ class SplashScreen extends StatelessWidget {
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: ((context) => const AskRole())));
     });
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: initialBg,
       body: Column(
           children: <Widget>[
             SizedBox(height: MediaQuery.of(context).size.height * 0.2),

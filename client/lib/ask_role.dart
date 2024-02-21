@@ -8,7 +8,7 @@ class AskRole extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: initialBg,
       body: Column(
         children: <Widget>[
           SizedBox(height: MediaQuery.of(context).size.height * 0.2),
