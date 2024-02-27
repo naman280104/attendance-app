@@ -17,6 +17,7 @@ const TeacherSchema = new mongoose.Schema(
         institute_name: {
             type: String,
             required: false,
+            default: "",
             trim: true,
         },
         clasrooms: [
