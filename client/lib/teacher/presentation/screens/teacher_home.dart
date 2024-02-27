@@ -23,11 +23,10 @@ class _TeacherHomeState extends State<TeacherHome> {
   void initState() {
     username = 'Teacher';
     classrooms = [
-      {'courseName': 'Classroom-1','numberOfStudents':'20'},
-      {'courseName': 'Classroom-2','numberOfStudents':'30'}
+      {'courseName': 'Course1','numberOfStudents':'79','courseCode':'axhyeds'},
+      {'courseName': 'Course2','numberOfStudents':'79','courseCode':'jdhydki'}
     ];
     super.initState();
-
   }
 
   @override
@@ -40,7 +39,7 @@ class _TeacherHomeState extends State<TeacherHome> {
         child: ListView.builder(
           itemCount: classrooms.length,
           itemBuilder: (context,index){
-            return TeacherClassroomCard(classroomName: classrooms[index]['courseName']!, numberOfStudents: classrooms[index]['numberOfStudents']!,deleteClassroomCallback: deleteClassroomCallback,);
+            return TeacherClassroomCard(courseName: classrooms[index]['courseName']!, numberOfStudents: classrooms[index]['numberOfStudents']!,courseCode: classrooms[index]['courseCode'],deleteClassroomCallback: deleteClassroomCallback,);
           },
         ),
       ),
@@ -49,26 +48,31 @@ class _TeacherHomeState extends State<TeacherHome> {
           showDialog(
             context: context, 
             builder: (context) => AlertDialog(
-              title: Text('Course Code'),
+              title: Text('Course Name'),
               content: TextField(
                 controller: newClassroomCode,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: "Enter Course Code",
+                  hintText: "Enter Course Name",
                 ),
               ),
               actions: [
                 TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: complementaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    )
+                  ),
                   onPressed: (){
                     print(newClassroomCode.text);
                     Navigator.pop(context);
                   },
-                  child: Text('Confirm')
+                  child: Text('Add Course',style: TextStyle(color: primaryBlack),)
                 )
               ],
             )
             );
-          
           print('Floating Action Button Pressed');
         },
         backgroundColor: primaryBlack,

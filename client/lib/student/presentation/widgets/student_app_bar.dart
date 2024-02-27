@@ -1,3 +1,4 @@
+import 'package:attendance/student/presentation/screens/student_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:attendance/assets/constants/colors.dart';
@@ -15,7 +16,7 @@ class StudentAppBar extends StatelessWidget implements PreferredSizeWidget{
           margin: const EdgeInsets.only(right: 10),
             child: IconButton(
               onPressed: () {
-                print('Profile Icon Pressed from Homepage');
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>StudentProfile()));
               },
               icon: const Icon(CupertinoIcons.person_crop_circle,size: 40,color: primaryBlack,),)
         )

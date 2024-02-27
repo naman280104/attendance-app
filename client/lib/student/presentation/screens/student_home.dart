@@ -19,6 +19,7 @@ class _StudentHomeState extends State<StudentHome> {
   void deleteClassroomCallback(){}
   late final String username;
   late final List<dynamic> classrooms;
+
   @override
   void initState() {
     username = 'Student';
@@ -27,12 +28,10 @@ class _StudentHomeState extends State<StudentHome> {
       {'courseName': 'Classroom-2','instructorName':'Prof. B'}
     ];
     super.initState();
-
   }
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       appBar: StudentAppBar(username: username,),
       body: Container(
@@ -40,7 +39,11 @@ class _StudentHomeState extends State<StudentHome> {
         child: ListView.builder(
           itemCount: classrooms.length,
           itemBuilder: (context,index){
-            return StudentClassroomCard(classroomName: classrooms[index]['courseName']!, instructorName: classrooms[index]['instructorName']!,deleteClassroomCallback: deleteClassroomCallback,);
+            return StudentClassroomCard(
+              courseName: classrooms[index]['courseName']!,
+              instructorName: classrooms[index]['instructorName']!,
+              deleteClassroomCallback: deleteClassroomCallback,
+            );
           },
         ),
       ),
@@ -59,16 +62,21 @@ class _StudentHomeState extends State<StudentHome> {
               ),
               actions: [
                 TextButton(
+                  style: TextButton.styleFrom(
+                      backgroundColor: complementaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      )
+                  ),
                   onPressed: (){
                     print(newClassroomName.text);
                     Navigator.pop(context);
                   },
-                  child: Text('Confirm')
+                  child: Text('Join',style: TextStyle(color: primaryBlack),)
                 )
               ],
             )
-            );
-          
+          );
           print('Floating Action Button Pressed');
         },
         backgroundColor: primaryBlack,

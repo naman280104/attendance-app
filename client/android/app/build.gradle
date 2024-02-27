@@ -51,15 +51,16 @@ android {
         versionName flutterVersionName
     }
 
-    signingConfigs{
-        debug {
-            
-            keyAlias localProperties.getProperty("KEY_ALIAS")
-            storePassword localProperties.getProperty("STORE_PASSWORD")
-            storeFile file(localProperties.getProperty("STORE_FILE"))
-            keyPassword localProperties.getProperty("KEY_PASSWORD")
-        }
-    }
+//    signingConfigs{
+//        debug {
+//
+//            keyAlias localProperties.getProperty("KEY_ALIAS")
+//            storePassword localProperties.getProperty("STORE_PASSWORD")
+//            storeFile file(localProperties.getProperty("STORE_FILE"))
+//            keyPassword localProperties.getProperty("KEY_PASSWORD")
+//        }
+//    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

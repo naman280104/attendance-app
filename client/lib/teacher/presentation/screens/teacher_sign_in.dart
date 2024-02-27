@@ -1,4 +1,5 @@
 import 'package:attendance/assets/constants/colors.dart';
+import 'package:attendance/teacher/presentation/screens/teacher_home.dart';
 import 'package:flutter/material.dart';
 
 class TeacherSignIn extends StatelessWidget {
@@ -18,7 +19,9 @@ class TeacherSignIn extends StatelessWidget {
               width: 280,
               height: 60,
               child: ElevatedButton(
-                onPressed: (){},
+                onPressed: (){
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>TeacherHome()), (route) => false);
+                },
                 child: Row(
                   children: <Widget>[
                     Image.asset('lib/assets/images/google.png',height: 30,width: 30,),
