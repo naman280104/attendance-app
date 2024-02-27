@@ -19,12 +19,6 @@ const TeacherSchema = new mongoose.Schema(
             required: false,
             trim: true,
         },
-        beacon_id: {
-            type: String,
-            required: true,
-            trim: true,
-            unique: true,
-        },
         clasrooms: [
             {
                 classroom_id: {

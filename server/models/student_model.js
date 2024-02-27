@@ -6,6 +6,7 @@ const StudentSchema = new mongoose.Schema(
             type: String,
             required: true,
             trim: true,
+            unique: true,
         },
         name: {
             type: String,
@@ -24,14 +25,6 @@ const StudentSchema = new mongoose.Schema(
             trim: true,
             match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
         },
-        student_attendace: [
-            {
-                att_id: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "Attendance",
-                }
-            },
-        ]
     },
     {
         timestamps: true,

@@ -11,23 +11,28 @@ const ClassroomSchema = new mongoose.Schema(
             type: String,
             required: true,
             trim: true,
+            unique: true,
         },
-        classroom_students: [
-            {
-                student_id: {
+        beacon_id: {
+            type: String,
+            required: true,
+            trim: true,
+            unique: true,
+        },
+        classroom_students: {
+            student_id: [
+                {
                     type: mongoose.Schema.Types.ObjectId,
-                    ref: "Student",
+                    ref: "Attendance",
                 }
-            },
-        ],
+            ]
+        },
         classroom_lectures: [
             {
-                lecture_id: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "Lecture",
-                }
-            },
-        ]
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Lecture",
+            }
+        ],
     },
     {
         timestamps: true,
@@ -36,4 +41,3 @@ const ClassroomSchema = new mongoose.Schema(
 
 
 module.exports = mongoose.model("Classroom", ClassroomSchema);
-

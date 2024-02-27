@@ -16,7 +16,11 @@ const LectureSchema = new mongoose.Schema(
             type: Date,
             required: true,
             trim: true,
-        }
+        },
+        is_accepting: {
+            type: Boolean,
+            default: true,
+        },
     },
     {
         timestamps: true,
