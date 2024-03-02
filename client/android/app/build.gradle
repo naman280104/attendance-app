@@ -12,6 +12,12 @@ if (localPropertiesFile.exists()) {
     }
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
     flutterVersionCode = '1'
@@ -50,15 +56,13 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
-
-    signingConfigs{
-        debug {
-            
-            keyAlias localProperties.getProperty("KEY_ALIAS")
-            storePassword localProperties.getProperty("STORE_PASSWORD")
-            storeFile file(localProperties.getProperty("STORE_FILE"))
-            keyPassword localProperties.getProperty("KEY_PASSWORD")
-        }
+    signingConfigs {
+       debug {
+           keyAlias keystoreProperties['KEY_ALIAS']
+           keyPassword keystoreProperties['KEY_PASSWORD']
+           storeFile keystoreProperties['STORE_FILE'] ? file(keystoreProperties['STORE_FILE']) : null
+           storePassword keystoreProperties['STORE_PASSWORD']
+       }
     }
     buildTypes {
         release {
