@@ -1,5 +1,5 @@
 import 'package:attendance/assets/constants/colors.dart';
-import 'package:attendance/student/presentation/screens/student_home.dart';
+import 'package:attendance/student/services/student_authentication_services.dart';
 import 'package:flutter/material.dart';
 
 class StudentSignIn extends StatelessWidget {
@@ -20,7 +20,7 @@ class StudentSignIn extends StatelessWidget {
               height: 60,
               child: ElevatedButton(
                 onPressed: (){
-                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>StudentHome()), (route) => false);
+                  StudentAuthenticationServices().handleSignIn(context);
                 },
                 child: Row(
                   children: <Widget>[
