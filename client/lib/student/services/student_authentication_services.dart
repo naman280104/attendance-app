@@ -1,15 +1,20 @@
+import 'dart:convert';
+import 'package:attendance/assets/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:advertising_id/advertising_id.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../presentation/screens/student_home.dart';
 import 'package:http/http.dart' as http;
 
-import '../presentation/screens/student_home.dart';
 
+String hostIP = dotenv.env['HOST_IP']!;
+int hostPort = int.parse(dotenv.env['HOST_PORT']!);
 
 class StudentAuthenticationServices{
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email','profile','openid']);
-
   Future<void> handleSignIn(context) async {
     try {
       await _googleSignIn.signIn();
@@ -18,12 +23,23 @@ class StudentAuthenticationServices{
       final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
       final String googleToken = googleAuth.accessToken!;
       print(googleToken);
-      http.post(Uri(scheme:'http', host:'172.30.21.97',port: 3000 ,path: '/auth/teacher/login'), body: {'googleToken': googleToken});
+      String advertisingId = await getAdvertisingId();
+      var res = await http.post(Uri(scheme:'http', host: hostIP ,port: hostPort ,path: '/student/auth/login'), body: {'googleToken': googleToken,'advertisingId':advertisingId});
+      if(res.statusCode == 200){
+        FlutterSecureStorageClass securestorage = FlutterSecureStorageClass();
+        Map<String, dynamic> responseBody = json.decode(res.body);
+        print(responseBody);
+        await securestorage.writeSecureData("token", responseBody['token']);
+
+        FlutterSecureStorageClass securestorage2 = FlutterSecureStorageClass();
+        print("token is ${await securestorage2.readSecureData('token')}");
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>StudentHome(username: responseBody['name'])), (route) => false);
+      } 
+      else{
+        print('Google Sign-In failed: ${res.body}');
+      }
     } catch (error) {
       print('Google Sign-In failed: $error');
-      // Handle sign-in failure
-    } finally {
-      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>StudentHome()), (route) => false);
     }
   }
 }
@@ -41,15 +57,17 @@ Function getAdvertisingId = () async {
     
     if(isLimitAdTrackingEnabled == true){
       print("Limit Ad Tracking is enabled"); //promt user to open it
-      return true;
+      throw Exception("Limit Ad Tracking is enabled");
       } 
     
     String? advertisingId;
     try {
       advertisingId = await AdvertisingId.id(true);
     } on PlatformException {
-      advertisingId = null;
+      throw Exception("Failed to get advertising id");
     }
 
-    print("advertising id is $advertisingId");      
+
+    print("advertising id is $advertisingId");   
+    return advertisingId;   
 };

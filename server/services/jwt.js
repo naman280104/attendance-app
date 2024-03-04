@@ -15,8 +15,8 @@ const connectredis = async () => {
         return false;
     }
 }
+
 const createToken = async(id) => {
-    await connectredis();
     const token = await jwtr.sign(id,JWT_SECRET,{
         expiresIn: "15 days"
     }); 
@@ -25,7 +25,6 @@ const createToken = async(id) => {
 }
 
 const verifyToken = async (token) => {
-    await connectredis();
     try{
         const userVar = await jwtr.verify(token,JWT_SECRET);
         return userVar;
@@ -37,12 +36,13 @@ const verifyToken = async (token) => {
 }
 
 const deleteToken = async (token) => {
-    await connectredis();
     try{
         await jwtr.verify(token,JWT_SECRET).then(async(res)=>{
             await jwtr.destroy(res.jti,JWT_SECRET);
+            return true;
+
         }).catch((err)=>{
-            return "wrong token";
+            return false;
         });
     }
     catch(err){

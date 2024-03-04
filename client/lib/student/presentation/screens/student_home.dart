@@ -1,13 +1,16 @@
+import 'package:attendance/assets/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:attendance/student/presentation/widgets/student_classroom_card.dart';
 import 'package:attendance/student/presentation/widgets/student_app_bar.dart';
 import 'package:attendance/assets/constants/colors.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 
 
 class StudentHome extends StatefulWidget {
-  const StudentHome({super.key});
+  final String username;
+  const StudentHome({super.key,required this.username});
 
   @override
   State<StudentHome> createState() => _StudentHomeState();
@@ -20,9 +23,9 @@ class _StudentHomeState extends State<StudentHome> {
   late final String username;
   late final List<dynamic> classrooms;
 
+  
   @override
-  void initState() {
-    username = 'Student';
+  void initState(){
     classrooms = [
       {'courseName': 'Classroom-1','instructorName':'Prof. A'},
       {'courseName': 'Classroom-2','instructorName':'Prof. B'}
@@ -33,7 +36,7 @@ class _StudentHomeState extends State<StudentHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: StudentAppBar(username: username,),
+      appBar: StudentAppBar(username: widget.username,),
       body: Container(
         padding: const EdgeInsets.only(top: 10),
         child: ListView.builder(

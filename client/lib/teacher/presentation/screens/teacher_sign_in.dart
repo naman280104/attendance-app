@@ -1,5 +1,6 @@
 import 'package:attendance/assets/constants/colors.dart';
 import 'package:attendance/teacher/presentation/screens/teacher_home.dart';
+import 'package:attendance/teacher/services/teacher_authentication_services.dart';
 import 'package:flutter/material.dart';
 
 class TeacherSignIn extends StatelessWidget {
@@ -20,7 +21,7 @@ class TeacherSignIn extends StatelessWidget {
               height: 60,
               child: ElevatedButton(
                 onPressed: (){
-                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>TeacherHome()), (route) => false);
+                  TeacherAuthenticationServices().handleSignIn(context);
                 },
                 child: Row(
                   children: <Widget>[

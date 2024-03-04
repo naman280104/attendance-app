@@ -17,14 +17,28 @@ app.use(express.urlencoded({ extended: true }));
 const http = require('http').Server(app);
 
 
-app.use('/auth/teacher', require('./routes/auth_teacher_routes'));
+const auth_middleware = require('./middlewares/auth');
+const { getRole } = require('./controllers/get_role');
+const {connectredis} = require('./services/jwt');
+
+app.use('/auth/verify',getRole);
+app.use('/teacher/auth', require('./routes/auth_teacher_routes'));
+app.use('/student/auth', require('./routes/auth_student_routes'));
+app.use('/teacher/profile',auth_middleware.isTeacher, require('./routes/profile_teacher_routes'));
+app.use('/student/profile',auth_middleware.isStudent, require('./routes/profile_student_routes'));
 
 
 app.listen(PORT, async () => {
     console.log('Server is running on port',PORT);
     require('./services/db');
+    await connectredis();
 });
 
 app.get('/', (req, res) => {
-    res.send('Hello World');
+    console.log('Hello World');
+    console.log(req);
+    console.log();
+    console.log();
+    res.json('Hello World');
+
 });

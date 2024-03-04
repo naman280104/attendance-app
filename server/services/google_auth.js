@@ -8,12 +8,15 @@ const client = new OAuth2Client(CLIENT_ID);
 const verifyGoogleToken = async (accessToken) => {
     console.log(accessToken);
     const tokenInfoEndpoint = `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`;
-
+    const userInfoEndpoint = `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`;
+ 
     try {
-        const response = await axios.get(tokenInfoEndpoint);
-        const tokenInfo = response.data;
+        const responsetoken = await axios.get(tokenInfoEndpoint);
+        const responseuser = await axios.get(userInfoEndpoint);
+        const tokenInfo = responsetoken.data;
+        console.log(tokenInfo);
         if (tokenInfo.aud === CLIENT_ID) {  
-            return tokenInfo;
+            return responseuser.data;
         } 
         else {
             console.log('Access token is not valid for your client.');

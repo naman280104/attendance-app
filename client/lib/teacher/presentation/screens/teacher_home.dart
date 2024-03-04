@@ -7,7 +7,8 @@ import 'package:attendance/assets/constants/colors.dart';
 
 
 class TeacherHome extends StatefulWidget {
-  const TeacherHome({super.key});
+  final String username;
+  const TeacherHome({super.key, required this.username});
 
   @override
   State<TeacherHome> createState() => _TeacherHomeState();
@@ -17,11 +18,9 @@ class _TeacherHomeState extends State<TeacherHome> {
 
   final TextEditingController newClassroomCode = TextEditingController(); 
   void deleteClassroomCallback(){}
-  late final String username;
   late final List<dynamic> classrooms;
   @override
   void initState() {
-    username = 'Teacher';
     classrooms = [
       {'courseName': 'Course1','numberOfStudents':'79','courseCode':'axhyeds'},
       {'courseName': 'Course2','numberOfStudents':'79','courseCode':'jdhydki'}
@@ -33,7 +32,7 @@ class _TeacherHomeState extends State<TeacherHome> {
   Widget build(BuildContext context) {
     
     return Scaffold(
-      appBar: TeacherAppBar(username: username,),
+      appBar: TeacherAppBar(username: widget.username,),
       body: Container(
         padding: const EdgeInsets.only(top: 10),
         child: ListView.builder(
