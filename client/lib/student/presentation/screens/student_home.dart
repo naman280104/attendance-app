@@ -9,8 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 
 class StudentHome extends StatefulWidget {
-  final String username;
-  const StudentHome({super.key,required this.username});
+  const StudentHome({super.key});
 
   @override
   State<StudentHome> createState() => _StudentHomeState();
@@ -36,7 +35,7 @@ class _StudentHomeState extends State<StudentHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: StudentAppBar(username: widget.username,),
+      appBar: StudentAppBar(),
       body: Container(
         padding: const EdgeInsets.only(top: 10),
         child: ListView.builder(

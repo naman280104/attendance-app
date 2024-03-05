@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:attendance/ask_role.dart';
+import 'package:attendance/assets/myprovider.dart';
 import 'package:attendance/student/presentation/screens/student_home.dart';
 import 'package:attendance/assets/flutter_secure_storage.dart';
 import 'package:attendance/teacher/presentation/screens/teacher_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 import 'assets/constants/colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -34,11 +36,13 @@ class SplashScreen extends StatelessWidget {
             String username = responseBody['name'] ;
             if(role == 'teacher'){
               isvalid = true;
-              Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: ((context) => TeacherHome(username: username))),(route) => false);
+              Provider.of<MyProvider>(context, listen: false).setName(username);
+              Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: ((context) => TeacherHome())),(route) => false);
             }
             else if(role == 'student'){
               isvalid = true;
-              Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: ((context) => StudentHome(username: username,))),(route) => false);
+              Provider.of<MyProvider>(context, listen: false).setName(username);
+              Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: ((context) => StudentHome())),(route) => false);
             }
           }
         }

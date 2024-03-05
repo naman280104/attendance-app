@@ -1,4 +1,5 @@
 import 'package:attendance/splash_screen.dart';
+import 'package:attendance/student/services/student_authentication_services.dart';
 import 'package:attendance/student/services/student_profile_service.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +44,7 @@ class _StudentProfileState extends State<StudentProfile> {
                 ),
                 TextButton(
                   onPressed: () {
-                    StudentProfileService.logout(context);
+                    StudentAuthenticationServices().logout(context);
                   }, 
                   child: Text('Logout')
                 ),
@@ -135,6 +136,7 @@ class _StudentProfileState extends State<StudentProfile> {
                       "name": nameController.text,
                       "roll_no": rollNumberController.text
                     };
+
                     StudentProfileService.updateProfileDetials(profileDetails,context);
                   },
                   child: Container(

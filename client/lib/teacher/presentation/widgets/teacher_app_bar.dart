@@ -1,16 +1,18 @@
+import 'package:attendance/assets/myprovider.dart';
 import 'package:attendance/teacher/presentation/screens/teacher_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:attendance/assets/constants/colors.dart';
+import 'package:provider/provider.dart';
 
 class TeacherAppBar extends StatelessWidget implements PreferredSizeWidget{
-  final String username;
-  const TeacherAppBar({super.key, required this.username});
+  const TeacherAppBar({super.key});
 
   @override
   AppBar build(BuildContext context) {
     return AppBar(
-      title: Text('Hi $username',style: const TextStyle(fontSize: 22,fontWeight: FontWeight.w500),),
+      title: Consumer<MyProvider>(
+        builder: (context,myProvider,child) => Text('Hi ${myProvider.name}',style: const TextStyle(fontSize: 22,fontWeight: FontWeight.w500),)),
       actions: [
         Container(
           margin: const EdgeInsets.only(right: 10),

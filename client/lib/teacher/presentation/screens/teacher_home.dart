@@ -7,8 +7,7 @@ import 'package:attendance/assets/constants/colors.dart';
 
 
 class TeacherHome extends StatefulWidget {
-  final String username;
-  const TeacherHome({super.key, required this.username});
+  const TeacherHome({super.key,});
 
   @override
   State<TeacherHome> createState() => _TeacherHomeState();
@@ -32,7 +31,7 @@ class _TeacherHomeState extends State<TeacherHome> {
   Widget build(BuildContext context) {
     
     return Scaffold(
-      appBar: TeacherAppBar(username: widget.username,),
+      appBar: TeacherAppBar(),
       body: Container(
         padding: const EdgeInsets.only(top: 10),
         child: ListView.builder(

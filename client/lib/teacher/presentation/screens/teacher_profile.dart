@@ -1,9 +1,12 @@
 import 'package:attendance/assets/constants/colors.dart';
+import 'package:attendance/assets/myprovider.dart';
+import 'package:attendance/teacher/services/teacher_authentication_services.dart';
 import 'package:attendance/teacher/services/teacher_profile_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class TeacherProfile extends StatefulWidget {
-  const TeacherProfile({super.key});
+  const TeacherProfile({super.key,});
 
   @override
   State<TeacherProfile> createState() => _TeacherProfileState();
@@ -42,7 +45,7 @@ class _TeacherProfileState extends State<TeacherProfile> {
                 ),
                 TextButton(
                   onPressed: () {
-                    TeacherProfileService.logout(context);
+                    TeacherAuthenticationServices().logout(context);
                   }, 
                   child: Text('Logout')
                 ),
@@ -118,6 +121,7 @@ class _TeacherProfileState extends State<TeacherProfile> {
                       "name": nameController.text,
                     };
                     TeacherProfileService.updateProfileDetials(profileDetails,context);
+                    
                   },
                   child: Container(
                     padding: EdgeInsets.fromLTRB(10, 5, 10, 5),

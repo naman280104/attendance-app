@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:attendance/assets/flutter_secure_storage.dart';
+import 'package:attendance/assets/myprovider.dart';
+import 'package:attendance/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:advertising_id/advertising_id.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import '../presentation/screens/student_home.dart';
 import 'package:http/http.dart' as http;
 
@@ -17,6 +20,7 @@ class StudentAuthenticationServices{
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email','profile','openid']);
   Future<void> handleSignIn(context) async {
     try {
+      await _googleSignIn.signOut();
       await _googleSignIn.signIn();
       // Get the GoogleSignInAccount object and send the token to the backend
       final GoogleSignInAccount? googleUser = _googleSignIn.currentUser;
@@ -33,7 +37,8 @@ class StudentAuthenticationServices{
 
         FlutterSecureStorageClass securestorage2 = FlutterSecureStorageClass();
         print("token is ${await securestorage2.readSecureData('token')}");
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>StudentHome(username: responseBody['name'])), (route) => false);
+        Provider.of<MyProvider>(context, listen: false).setName(responseBody['name']);
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>StudentHome()), (route) => false);
       } 
       else{
         print('Google Sign-In failed: ${res.body}');
@@ -41,6 +46,17 @@ class StudentAuthenticationServices{
     } catch (error) {
       print('Google Sign-In failed: $error');
     }
+  }
+
+  void logout(context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    await secureStorage.deleteAllSecureData();
+    Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: ((context) => const SplashScreen())),(route) => false);
+    if(token!=null){
+      await http.post(Uri(scheme:'http', host: hostIP ,port: hostPort ,path: '/student/auth/logout',), headers: {'Authorization': token});
+    }
+    await _googleSignIn.signOut();
   }
 }
 
