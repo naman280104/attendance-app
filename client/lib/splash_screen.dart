@@ -20,7 +20,7 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Future.delayed(const Duration(seconds: 2), ()async {
+    Future.delayed(const Duration(milliseconds: 500), () async {
       FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
       String? token = await secureStorage.readSecureData('token');
       print("token is $token");

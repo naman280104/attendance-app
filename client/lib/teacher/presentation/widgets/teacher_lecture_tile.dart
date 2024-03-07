@@ -5,10 +5,10 @@ import '../../../assets/constants/colors.dart';
 
 class TeacherLectureTile extends StatelessWidget {
   final List<dynamic> lecture;
-  final String courseName,courseCode;
+  final String classroomName,courseCode;
   const TeacherLectureTile({
     super.key,
-    required this.lecture, required this.courseName,required this.courseCode
+    required this.lecture, required this.classroomName,required this.courseCode
   });
 
   @override
@@ -18,7 +18,7 @@ class TeacherLectureTile extends StatelessWidget {
       child: ElevatedButton(
         onPressed: () {
           print('${lecture[0]} Pressed');
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>TeacherLecturePage(lecture: lecture,courseCode: courseCode,courseName: courseName,)));
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>TeacherLecturePage(lecture: lecture,courseCode: courseCode,classroomName: classroomName,)));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Color(0xFFEEEEEE),

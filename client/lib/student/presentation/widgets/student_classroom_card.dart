@@ -6,16 +6,16 @@ import '../screens/student_classroom.dart';
 
 
 class StudentClassroomCard extends StatelessWidget {
-  final String courseName, instructorName;
+  final String classroomName, instructorName;
   final Function deleteClassroomCallback;
 
-  const StudentClassroomCard({super.key,required this.courseName,required this.instructorName,required this.deleteClassroomCallback});
+  const StudentClassroomCard({super.key,required this.classroomName,required this.instructorName,required this.deleteClassroomCallback});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: (){
-        Navigator.push(context, MaterialPageRoute(builder: (context)=>StudentClassroom(courseName: courseName,)));
+        Navigator.push(context, MaterialPageRoute(builder: (context)=>StudentClassroom(classroomName: classroomName,)));
       },
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -32,7 +32,7 @@ class StudentClassroomCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(courseName,style: const TextStyle(fontSize: 30,fontWeight: FontWeight.w500),),
+                Text(classroomName,style: const TextStyle(fontSize: 30,fontWeight: FontWeight.w500),),
                 IconButton(
                     onPressed: (){
                       _showDeleteClassroomOption(context);

@@ -56,7 +56,7 @@ class StudentProfileServices {
     } else {
       // logic for fetch profile details
       try {
-        var response = await http.put(
+        var response = await http.post(
             Uri(
                 scheme: 'http',
                 host: hostIP,

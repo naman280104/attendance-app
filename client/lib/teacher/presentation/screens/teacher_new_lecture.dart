@@ -5,11 +5,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class TeacherNewLecture extends StatefulWidget {
-  final String courseName, courseCode, lectureNumber;
+  final String classroomName, courseCode, lectureNumber;
 
   const TeacherNewLecture(
       {super.key,
-      required this.courseName,
+      required this.classroomName,
       required this.courseCode,
       required this.lectureNumber});
 
@@ -41,7 +41,7 @@ class _TeacherNewLectureState extends State<TeacherNewLecture> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.courseName,style: TextStyle(fontWeight: FontWeight.w700, fontSize: 24),
+        title: Text(widget.classroomName,style: TextStyle(fontWeight: FontWeight.w700, fontSize: 24),
         ),
         backgroundColor: classroomTileBg,
       ),
@@ -224,8 +224,8 @@ class _TeacherNewLectureState extends State<TeacherNewLecture> {
       bottomNavigationBar: fullAttendanceView == false ?
       TextButton(
         onPressed: (){
-          if (!broadcasting) print('Broadcast Button Pressed for ${widget.courseName}');
-          else print('Stop Button Pressed for Course ${widget.courseName}');
+          if (!broadcasting) print('Broadcast Button Pressed for ${widget.classroomName}');
+          else print('Stop Button Pressed for Course ${widget.classroomName}');
           setState(() {
             broadcasting = !broadcasting;
           });

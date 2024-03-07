@@ -2,11 +2,11 @@ import 'package:attendance/assets/constants/colors.dart';
 import 'package:flutter/material.dart';
 
 class StudentClassroom extends StatefulWidget {
-  final String courseName;
+  final String classroomName;
 
   const StudentClassroom({
     super.key,
-    required this.courseName
+    required this.classroomName
   });
 
   @override
@@ -26,7 +26,7 @@ class _StudentClassroomState extends State<StudentClassroom> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.courseName,style: TextStyle(fontWeight: FontWeight.w700,fontSize: 24),),backgroundColor: classroomTileBg),
+      appBar: AppBar(title: Text(widget.classroomName,style: TextStyle(fontWeight: FontWeight.w700,fontSize: 24),),backgroundColor: classroomTileBg),
       body:
           fullAttendanceView == false ?
       Column(
@@ -60,7 +60,7 @@ class _StudentClassroomState extends State<StudentClassroom> {
                   )
               ),
               onPressed: (){
-                print('Mark Attendance Button Pressed for course ${widget.courseName}');
+                print('Mark Attendance Button Pressed for course ${widget.classroomName}');
               },
               child: Container(
                 padding: EdgeInsets.fromLTRB(10, 5, 10, 5),

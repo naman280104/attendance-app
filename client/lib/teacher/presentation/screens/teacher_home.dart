@@ -27,8 +27,8 @@ class _TeacherHomeState extends State<TeacherHome> {
   @override
   void initState() {
     // classrooms = [
-    //   {'courseName': 'Course1','numberOfStudents':'79','courseCode':'axhyeds'},
-    //   {'courseName': 'Course2','numberOfStudents':'79','courseCode':'jdhydki'}
+    //   {'classroomName': 'Course1','numberOfStudents':'79','courseCode':'axhyeds'},
+    //   {'classroomName': 'Course2','numberOfStudents':'79','courseCode':'jdhydki'}
     // ];
     super.initState();
   }
@@ -59,9 +59,11 @@ class _TeacherHomeState extends State<TeacherHome> {
                   itemCount: classrooms.length,
                   itemBuilder: (context, index) {
                     return TeacherClassroomCard(
-                      courseName: classrooms[index]['classroom_name']!,
-                      numberOfStudents: classrooms[index]['no_of_students']!.toString(),
-                      courseCode: "abc",
+                      classroomName: classrooms[index]['classroom_name']!,
+                      numberOfStudents:
+                          classrooms[index]['no_of_students']!.toString(),
+                      classroomID:
+                          classrooms[index]['classroom_id']!.toString(),
                       deleteClassroomCallback: deleteClassroomCallback,
                     );
                   },
@@ -72,7 +74,6 @@ class _TeacherHomeState extends State<TeacherHome> {
           }),
       floatingActionButton: FloatingActionButton(
           onPressed: () {
-
             showDialog(
                 context: context,
                 builder: (context) => AlertDialog(

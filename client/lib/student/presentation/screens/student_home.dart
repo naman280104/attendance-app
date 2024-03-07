@@ -26,8 +26,8 @@ class _StudentHomeState extends State<StudentHome> {
   @override
   void initState(){
     classrooms = [
-      {'courseName': 'Classroom-1','instructorName':'Prof. A'},
-      {'courseName': 'Classroom-2','instructorName':'Prof. B'}
+      {'classroomName': 'Classroom-1','instructorName':'Prof. A'},
+      {'classroomName': 'Classroom-2','instructorName':'Prof. B'}
     ];
     super.initState();
   }
@@ -42,7 +42,7 @@ class _StudentHomeState extends State<StudentHome> {
           itemCount: classrooms.length,
           itemBuilder: (context,index){
             return StudentClassroomCard(
-              courseName: classrooms[index]['courseName']!,
+              classroomName: classrooms[index]['classroomName']!,
               instructorName: classrooms[index]['instructorName']!,
               deleteClassroomCallback: deleteClassroomCallback,
             );

@@ -57,7 +57,7 @@ class TeacherProfileServices {
       // logic for fetch profile details
       print("update details");
       try {
-        var response = await http.put(
+        var response = await http.post(
             Uri(
                 scheme: 'http',
                 host: hostIP,

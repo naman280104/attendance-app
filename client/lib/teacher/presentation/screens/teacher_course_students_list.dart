@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../assets/constants/colors.dart';
 
 class StudentList extends StatefulWidget {
-  final String courseName,courseCode;
+  final String classroomName,courseCode;
   const StudentList({
     super.key,
-    required this.courseName,
+    required this.classroomName,
     required this.courseCode
   });
 
@@ -34,7 +34,7 @@ class _StudentListState extends State<StudentList> {
   Widget build(BuildContext context) {
     TextEditingController newStudentEmailController = TextEditingController();
     return Scaffold(
-      appBar: AppBar(title: Text(widget.courseName,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 24),),backgroundColor: classroomTileBg,),
+      appBar: AppBar(title: Text(widget.classroomName,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 24),),backgroundColor: classroomTileBg,),
       body: SingleChildScrollView(
         child: Column(
           children: [

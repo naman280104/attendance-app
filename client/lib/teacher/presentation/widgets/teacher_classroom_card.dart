@@ -1,20 +1,31 @@
 import 'package:attendance/teacher/presentation/screens/teacher_classroom.dart';
+import 'package:attendance/teacher/services/teacher_classroom_services.dart';
 import 'package:flutter/material.dart';
 import 'package:attendance/assets/constants/colors.dart';
 import 'package:flutter_awesome_bottom_sheet/flutter_awesome_bottom_sheet.dart';
 
-
 class TeacherClassroomCard extends StatelessWidget {
-  final String courseName, numberOfStudents, courseCode;
+  final String classroomName, numberOfStudents, classroomID;
   final Function deleteClassroomCallback;
 
-  const TeacherClassroomCard({super.key,required this.courseName,required this.numberOfStudents,required this.courseCode,required this.deleteClassroomCallback});
+  const TeacherClassroomCard(
+      {super.key,
+      required this.classroomName,
+      required this.numberOfStudents,
+      required this.classroomID,
+      required this.deleteClassroomCallback});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (){
-        Navigator.push(context, MaterialPageRoute(builder: (context)=>TeacherClassroom(courseCode: courseCode,courseName: courseName)));
+      onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => TeacherClassroom(
+                      classroomName: classroomName,
+                      classroomID: classroomID,
+                    )));
       },
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -31,33 +42,47 @@ class TeacherClassroomCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(courseName,style: const TextStyle(fontSize: 30,fontWeight: FontWeight.w500),),
+                Text(
+                  classroomName,
+                  style: const TextStyle(
+                      fontSize: 30, fontWeight: FontWeight.w500),
+                ),
                 IconButton(
-                    onPressed: (){
+                    onPressed: () {
                       _showDeleteClassroomOption(context);
                     },
-                    icon: const Icon(Icons.more_vert,size: 30,color: primaryBlack,)
-                ),
+                    icon: const Icon(
+                      Icons.more_vert,
+                      size: 30,
+                      color: primaryBlack,
+                    )),
               ],
             ),
-            Text('$numberOfStudents Students',style: const TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
+            Text(
+              '$numberOfStudents Students',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _showDeleteClassroomOption(context){
+  void _showDeleteClassroomOption(context) {
     AwesomeBottomSheet().show(
       context: context,
-      title: const Text("Delete",style: TextStyle(color: primaryBlack),),
+      title: const Text(
+        "Delete",
+        style: TextStyle(color: primaryBlack),
+      ),
       color: CustomSheetColor(
         mainColor: const Color(0xFFEEEEEE),
         accentColor: const Color(0xFFEEEEEE),
         iconColor: primaryBlack,
       ),
       positive: AwesomeSheetAction(
-        onPressed: () {
+        onPressed: () async {
+          await TeacherClassroomServices.deleteClassroom(classroomID, context);
           deleteClassroomCallback();
           Navigator.of(context).pop();
         },
@@ -71,7 +96,10 @@ class TeacherClassroomCard extends StatelessWidget {
         title: 'NO',
         color: primaryBlack,
       ),
-      description: const Text("Do you want to Delete this classroom?",style: TextStyle(color: primaryBlack),),
+      description: const Text(
+        "Do you want to Delete this classroom?",
+        style: TextStyle(color: primaryBlack),
+      ),
     );
   }
 }
