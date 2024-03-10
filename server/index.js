@@ -26,7 +26,7 @@ app.use('/student/auth', require('./routes/auth_student_routes'));
 app.use('/teacher/profile',auth_middleware.isTeacher, require('./routes/profile_teacher_routes'));
 app.use('/student/profile',auth_middleware.isStudent, require('./routes/profile_student_routes'));
 app.use('/teacher',auth_middleware.isTeacher, require('./routes/teacher_routes'));
-
+app.use('/student',auth_middleware.isStudent, require('./routes/student_routes'));
 
 app.listen(PORT, async () => {
     console.log('Server is running on port',PORT);

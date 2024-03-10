@@ -41,6 +41,7 @@ const createClassroom = async (req,res) => {
                 classroom_code: available_classroom_code,
                 classroom_name: classroom_name,
                 beacon_id: available_beacon_id,
+                teacher: teacher._id,
             });
             await classroom.save();
             console.log(classroom);
