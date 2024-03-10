@@ -7,20 +7,14 @@ const LectureSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-        lecture_name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        lecture_date: {
-            type: Date,
-            required: true,
-            trim: true,
-        },
         is_accepting: {
             type: Boolean,
             default: true,
         },
+        attendance_count: {
+            type: Number,
+            default: 0,
+        }
     },
     {
         timestamps: true,

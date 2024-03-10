@@ -20,13 +20,13 @@ const TeacherSchema = new mongoose.Schema(
             default: "",
             trim: true,
         },
-        clasrooms: [
+        classrooms: [
             {
                 classroom_id: {
                     type: mongoose.Schema.Types.ObjectId,
                     ref: "Classroom",
                 }
-            }
+            },
         ],
     }
 );
