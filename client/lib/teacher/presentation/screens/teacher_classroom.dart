@@ -1,20 +1,22 @@
 import 'package:attendance/teacher/presentation/screens/teacher_course_students_list.dart';
 import 'package:attendance/teacher/presentation/screens/teacher_new_lecture.dart';
+import 'package:attendance/teacher/presentation/widgets/teacher_classroom_app_bar.dart';
 import 'package:attendance/teacher/presentation/widgets/teacher_lecture_tile.dart';
 import 'package:attendance/teacher/services/teacher_classroom_services.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 
 import '../../../assets/constants/colors.dart';
 
 class TeacherClassroom extends StatefulWidget {
-  final String courseCode = "codePlaceholder";
   final String classroomName;
   final String classroomID;
-
+  final Function changeClassroomNameCallback;
   const TeacherClassroom({
     super.key,
     required this.classroomName,
-    required this.classroomID
+    required this.classroomID,
+    required this.changeClassroomNameCallback,
   });
 
   @override
@@ -23,12 +25,11 @@ class TeacherClassroom extends StatefulWidget {
 
 class _TeacherClassroomState extends State<TeacherClassroom> {
 
-  late final String classroomCode, classroomName, beaconID;
+  late String classroomCode, classroomName, beaconID;
 
   Future<Map<String, dynamic>> fetchClassroomInfo() {
     // return Future.delayed(Duration(seconds: 2), () { return {"1": "2"}; });
     return TeacherClassroomServices.getClassroomInfo(widget.classroomID, context);
-
   }
 
   List<dynamic> lectures = [
@@ -53,19 +54,7 @@ class _TeacherClassroomState extends State<TeacherClassroom> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: TextField(
-        controller: TextEditingController()..text = classroomName,
-        autocorrect: false,
-        onSubmitted: (val){
-          // call the edit-classroom-name end point...............
-        },
-        
-        style: TextStyle(fontWeight: FontWeight.w700,fontSize: 24),
-        decoration: InputDecoration(
-          suffixIcon: Icon(Icons.edit),
-          border: InputBorder.none,
-        ),
-      ),backgroundColor: classroomTileBg,),
+      appBar: TeacherClassroomAppBar(classroomName: classroomName,classroomID: widget.classroomID, changeClassroomNameCallback: widget.changeClassroomNameCallback,),
         body: FutureBuilder(
             future: fetchClassroomInfo(),
             builder: (context, snapshot) {
@@ -95,15 +84,29 @@ class _TeacherClassroomState extends State<TeacherClassroom> {
                       ),
                       // Add Lecture
                       ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => TeacherNewLecture(
-                                      classroomName: classroomName,
-                                      courseCode: widget.courseCode,
-                                      lectureNumber:
-                                          (lectures.length).toString())));
+                        onPressed: () async {
+                          print('Add Lecture Button Pressed for Course $classroomName');
+                          var response = await TeacherClassroomServices.addLecture(widget.classroomID, context);
+                          if(response['error']!=null){
+                            print(response);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['error']),));
+                            return;
+                          }
+                          else{
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lecture Added Successfully!'),));
+                            setState(() {});
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => TeacherNewLecture(
+                                        classroomName: classroomName,
+                                        courseCode: snapshot.data!["classroom_code"],
+                                        lectureID: response['lecture_id'],
+                                        lectureCode: response['lecture_code'],
+                                        lectureDate: response['lecture_date'],
+                                        lectureNumber:
+                                            (snapshot.data!["classroom_lectures"].length+1).toString())));
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                             elevation: 3,
@@ -129,12 +132,15 @@ class _TeacherClassroomState extends State<TeacherClassroom> {
                       ListView.builder(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
-                        itemCount: lectures.length,
+                        itemCount: snapshot.data!["classroom_lectures"].length,
                         itemBuilder: (BuildContext context, int index) {
                           return TeacherLectureTile(
-                            lecture: lectures[index],
-                            classroomName: classroomName,
-                            courseCode: widget.courseCode,
+                            lecture: [
+                              "Lecture ${index+1}",
+                              ' ${snapshot.data!["classroom_lectures"][index]["lecture_attendance_count"].toString()}/${snapshot.data!["no_of_students"]}',
+                              snapshot.data!["classroom_lectures"][index]["lecture_date"],
+                            ],
+                            courseCode: snapshot.data!["classroom_code"],
                           );
                         },
                       ),
@@ -151,7 +157,7 @@ class _TeacherClassroomState extends State<TeacherClassroom> {
       bottomNavigationBar: TextButton(
         onPressed: (){
           print('Students List Button Pressed for Course $classroomName');
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>StudentList(classroomName: classroomName, courseCode: widget.courseCode)));
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>StudentList(classroomName: classroomName)));
         },
         style: TextButton.styleFrom(
           backgroundColor: complementaryColor,

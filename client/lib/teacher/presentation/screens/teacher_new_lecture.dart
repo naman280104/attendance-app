@@ -6,12 +6,16 @@ import 'package:flutter/material.dart';
 
 class TeacherNewLecture extends StatefulWidget {
   final String classroomName, courseCode, lectureNumber;
-
+  final String lectureID, lectureCode;
+  final String lectureDate;
   const TeacherNewLecture(
       {super.key,
       required this.classroomName,
       required this.courseCode,
-      required this.lectureNumber});
+      required this.lectureNumber,
+      required this.lectureID,
+      required this.lectureCode,
+      required this.lectureDate});
 
   @override
   State<TeacherNewLecture> createState() => _TeacherNewLectureState();
@@ -39,9 +43,12 @@ class _TeacherNewLectureState extends State<TeacherNewLecture> {
 
   @override
   Widget build(BuildContext context) {
+
+    DateTime dateTime = DateTime.parse(widget.lectureDate);
+    String formattedDate = '${dateTime.day}/${dateTime.month}/${dateTime.year}';  
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.classroomName,style: TextStyle(fontWeight: FontWeight.w700, fontSize: 24),
+        title: Text('Lecture ${widget.lectureNumber}',style: TextStyle(fontWeight: FontWeight.w700, fontSize: 24),
         ),
         backgroundColor: classroomTileBg,
       ),
@@ -50,25 +57,43 @@ class _TeacherNewLectureState extends State<TeacherNewLecture> {
       Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              alignment: Alignment.centerRight,
-              margin: EdgeInsets.fromLTRB(0, 15, 15, 20),
-              child: TextButton(
-                  onPressed: () {
-                    setState(() {
-                      fullAttendanceView = true;
-                    });
-                  },
-                  style: TextButton.styleFrom(
-                      backgroundColor: Color(0xFFEEEEEE),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      )),
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.fromLTRB(5, 5, 5, 5),
+                  alignment: Alignment.centerLeft,
+                  margin: EdgeInsets.fromLTRB(15, 15, 0, 20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Color(0xFFEEEEEE),
+                  ),
                   child: Text(
-                    'Attendance View',
-                    style: TextStyle(color: primaryBlack),
-                  )
-              ),
+                    'Date: $formattedDate',
+                    style: TextStyle(fontWeight: FontWeight.w400, fontSize: 18),
+                  ),
+                ),
+                Expanded(child: SizedBox(width: 1,)),
+                Container(
+                  alignment: Alignment.centerRight,
+                  margin: EdgeInsets.fromLTRB(0, 15, 15, 20),
+                  child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          fullAttendanceView = true;
+                        });
+                      },
+                      style: TextButton.styleFrom(
+                          backgroundColor: Color(0xFFEEEEEE),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          )),
+                      child: Text(
+                        'Attendance View',
+                        style: TextStyle(color: primaryBlack),
+                      )
+                  ),
+                ),
+              ],
             ),
             Container(
               margin: EdgeInsets.fromLTRB(30, 0, 30, 0),

@@ -7,14 +7,15 @@ import 'package:flutter_awesome_bottom_sheet/flutter_awesome_bottom_sheet.dart';
 class TeacherClassroomCard extends StatelessWidget {
   final String classroomName, numberOfStudents, classroomID;
   final Function deleteClassroomCallback;
-
+  final Function changeClassroomNameCallback;
   const TeacherClassroomCard(
       {super.key,
       required this.classroomName,
       required this.numberOfStudents,
       required this.classroomID,
-      required this.deleteClassroomCallback});
-
+      required this.deleteClassroomCallback,
+      required this.changeClassroomNameCallback});
+  
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -25,6 +26,7 @@ class TeacherClassroomCard extends StatelessWidget {
                 builder: (context) => TeacherClassroom(
                       classroomName: classroomName,
                       classroomID: classroomID,
+                      changeClassroomNameCallback: changeClassroomNameCallback,
                     )));
       },
       child: Container(

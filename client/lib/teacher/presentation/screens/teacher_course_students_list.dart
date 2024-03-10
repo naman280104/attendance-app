@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../assets/constants/colors.dart';
 
 class StudentList extends StatefulWidget {
-  final String classroomName,courseCode;
+  final String classroomName;
   const StudentList({
     super.key,
     required this.classroomName,
-    required this.courseCode
   });
 
   @override

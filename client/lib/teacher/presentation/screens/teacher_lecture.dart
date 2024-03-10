@@ -2,12 +2,11 @@ import 'package:attendance/assets/constants/colors.dart';
 import 'package:flutter/material.dart';
 
 class TeacherLecturePage extends StatefulWidget {
-  final String classroomName,courseCode;
+  final String courseCode;
   final List<dynamic> lecture;
 
   const TeacherLecturePage({
     super.key,
-    required this.classroomName,
     required this.courseCode,
     required this.lecture
   });

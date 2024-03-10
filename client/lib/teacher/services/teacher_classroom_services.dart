@@ -117,7 +117,7 @@ class TeacherClassroomServices {
     return "";
   }
 
-    static Future<Map<String,dynamic>> getClassroomInfo(String classroomID, context) async {
+  static Future<Map<String,dynamic>> getClassroomInfo(String classroomID, context) async {
     FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
     String? token = await secureStorage.readSecureData("token");
     if(token==null){
@@ -149,6 +149,78 @@ class TeacherClassroomServices {
       catch(err){
           throw("Error fetching details");
           // return {"error" : "Error fetching details"};
+      }
+    }
+    return {};
+  }
+
+  static Future<String> editClassroomName(String classroomID, String classroomName,context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      print(classroomID);
+      try{
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/edit-classroom-name'),
+            headers: {'Authorization': token},
+            body: {'classroom_id': classroomID, 'classroom_name': classroomName}
+          );
+            
+        if(response.statusCode==200){
+          var responseBody = json.decode(response.body);
+          print("edit-classroom-name");
+          print(responseBody);
+          return "Changed Successfully!";
+        }
+        else{
+          return "Error in changing";
+        }
+      }
+      catch(err){
+        print(err);
+          return "Error in deleting $err";
+      }
+    }
+    return "";
+  }
+
+  static Future<Map<String,dynamic>> addLecture(String classroomID, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/add-lecture'
+            ),
+            body: {'classroom_id': classroomID},
+            headers: {'Authorization': token}
+          );
+          
+        if(response.statusCode==200){
+          var responseBody = json.decode(response.body);
+          print(responseBody);
+          return responseBody;
+        }
+        else{
+          return {"error" : "Error fetching details"};
+        }
+      }
+      catch(err){
+          return {"error" : "Error fetching details"};
       }
     }
     return {};

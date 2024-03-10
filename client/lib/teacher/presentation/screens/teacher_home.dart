@@ -23,6 +23,9 @@ class _TeacherHomeState extends State<TeacherHome> {
   void deleteClassroomCallback() {
     setState(() {});
   }
+  void changeClassroomNameCallback() {
+    setState(() {});
+  }
 
   @override
   void initState() {
@@ -65,6 +68,7 @@ class _TeacherHomeState extends State<TeacherHome> {
                       classroomID:
                           classrooms[index]['classroom_id']!.toString(),
                       deleteClassroomCallback: deleteClassroomCallback,
+                      changeClassroomNameCallback: changeClassroomNameCallback,
                     );
                   },
                 ),
@@ -98,7 +102,7 @@ class _TeacherHomeState extends State<TeacherHome> {
                               print(newClassroomCode.text);
                               Navigator.pop(context);
                               addClassroomCallback();
-                            },
+                            }, 
                             child: Text(
                               'Add Course',
                               style: TextStyle(color: primaryBlack),
