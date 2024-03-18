@@ -4,6 +4,9 @@ const Classroom = require('../models/classroom_model');
 const Lecture = require('../models/lecture_model');
 const Attendance = require('../models/attendance_model');
 
+const BEACON_ID_LENGTH = 16; //16 hex digits
+const LECTURE_CODE_LENGTH = 8; //8 hex digits
+
 const getAllClassrooms = async (req,res) => {
     
     try{
@@ -80,6 +83,7 @@ const joinClassroomByCode = async (req,res) => {
     }
 }
 
+
 const unenroll = async (req,res) => {
     try{
         const {classroom_id} = req.body;
@@ -118,12 +122,126 @@ const unenroll = async (req,res) => {
     }
 }
 
-const getMyAttendance = async (req,res) => {
+
+
+const getAttendanceBeaconIdentifier = async (req, res) => {
     try{
         const {classroom_id} = req.query;
-        const {email} = req.user;
-        const student = await Student.findOne({email: email});
+        const student = await Student.findOne({email: req.user.email});
+        if(!student){
+            return res.status(404).json({message: 'Student not found'});
+        }
+        
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
 
+        const student_ids = Array.from(classroom.classroom_students.keys())
+        if(!student_ids.includes(student._id.toString())){
+            return res.status(400).json({message: 'Student not in classroom'});
+        }
+
+        return res.status(200).json({beacon_id: classroom.beacon_id});
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+
+const markLiveAttendance = async (req,res) => {
+    try{
+        const {classroom_id, beacon_UUID, advertisement_id} = req.body;
+        console.log(classroom_id, beacon_UUID, advertisement_id);
+        if(!classroom_id || !beacon_UUID || !advertisement_id){
+            return res.status(400).json({message: 'classroom id, adv id and beacon uuid are required'});
+        }
+        const student = await Student.findOne({email: req.user.email});
+        if(!student){
+            return res.status(404).json({message: 'Student not found'});
+        }
+        
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        const student_ids = Array.from(classroom.classroom_students.keys())
+        // console.log(student_ids, student._id);
+        if(!student_ids.includes(student._id.toString())){
+            return res.status(400).json({message: 'Student not in classroom'});
+        }
+
+        const un_formatted_UUID = beacon_UUID.replace(/-/g, '');
+        const received_lecture_code = un_formatted_UUID.slice(-1 * LECTURE_CODE_LENGTH);
+        const received_classroom_beacon_id = un_formatted_UUID.slice(0,BEACON_ID_LENGTH);
+        
+        // console.log(received_classroom_beacon_id.length ,classroom.beacon_id.length);
+        // console.log(received_classroom_beacon_id == classroom.beacon_id);
+
+        if(received_classroom_beacon_id != classroom.beacon_id){
+            // console.log("not equal")
+            return res.status(400).json({message: 'Wrong Beacon UUID'});
+        }
+
+        let lecture_found = false;
+        console.log(received_lecture_code)
+
+        for(let i=0; i<classroom.classroom_lectures.length; i++){
+            const lecture = await Lecture.findById(classroom.classroom_lectures[i]);
+            console.log(i, lecture.lecture_code)
+            if(lecture.lecture_code == received_lecture_code){
+                lecture_found = true;
+                if(!(lecture.is_accepting_live & lecture.is_accepting)){
+                    return res.status(400).json({message: 'Lecture not accepting attendance'});
+                }
+                
+                const student_attendance = classroom.classroom_students.get(student._id);
+                for(let j=0; j<student_attendance.length; j++){
+                    const attendance = await Attendance.findById(student_attendance[j]["attendance_id"]);
+                    if(attendance.lecture_id.toString() == lecture._id.toString()){
+                        console.log("alreadyyyyyyyyyyyyyyyyy")
+                        return res.status(400).json({message: 'Attendance already marked'});
+                    }
+                }
+
+                const attendance = new Attendance({
+                    advertisement_id: advertisement_id,
+                    student_id: student._id,
+                    lecture_id: lecture._id,
+                });
+
+                await attendance.save();
+                
+                const updatedClassroom = await Classroom.findOneAndUpdate(
+                    { _id: classroom._id, [`classroom_students.${student._id}`] : { $exists: true } },
+                    { $push: { [`classroom_students.${student._id}`]: {attendance_id: attendance._id, lecture_id: lecture._id} } },
+                  );
+
+                console.log(updatedClassroom)
+
+                return res.status(200).json({message: 'Attendance marked successfully'});
+            }
+        }
+        
+        if(!lecture_found){
+            return res.status(400).json({message: 'Wrong Beacon UUID'});
+        }
+
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+
+const getMyAttendance = async (req,res) => {
+    const {classroom_id} = req.query;
+    try{
+        const student = await Student.findOne({email: req.user.email});
         if(!student){
             return res.status(404).json({message: 'Student not found'});
         }
@@ -133,9 +251,33 @@ const getMyAttendance = async (req,res) => {
             return res.status(404).json({message: 'Classroom not found'});
         }
 
-        
-        return res.status(200).json({myAttendance: myAttendance});
+        const student_ids = Array.from(classroom.classroom_students.keys());
+        if(!student_ids.includes(student._id.toString())){
+            return res.status(400).json({message: 'Student not in classroom'});
+        }
+        console.log(classroom.classroom_students);
+        console.log(classroom.classroom_lectures);
+        const student_attendance = classroom.classroom_students.get(student._id);
+        const classroom_lectures = classroom.classroom_lectures;
+        const attendance_of_student = [];
 
+        for(let i=0; i<classroom_lectures.length; i++){
+            let is_present = false;
+            const lecture = await Lecture.findById(classroom_lectures[i].toString());
+
+            for(let j=0; j<student_attendance.length; j++){
+                if(classroom_lectures[i].toString()==student_attendance[j]["lecture_id"]) {
+                    is_present = true;
+                    break;
+                }
+            }
+            attendance_of_student.push({
+                date: lecture.createdAt,
+                is_present: is_present,
+            });
+        }
+
+        return res.status(200).json({attendance: attendance_of_student});
     }
     catch(err){
         console.log(err);
@@ -143,4 +285,5 @@ const getMyAttendance = async (req,res) => {
     }
 }
 
-module.exports = {getAllClassrooms, joinClassroomByCode, unenroll, getMyAttendance};
+
+module.exports = {getAllClassrooms, joinClassroomByCode, unenroll, getMyAttendance, markLiveAttendance, getAttendanceBeaconIdentifier};
