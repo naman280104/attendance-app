@@ -21,7 +21,7 @@ const getRole = async (req,res) =>{
         return profile_teacher_controller.getProfile(req,res);
     }
     else{
-        return res.status(400).send({message: 'Error fetching role.'});
+        return res.status(400).json({message: 'Error fetching role.'});
     }
 } 
 

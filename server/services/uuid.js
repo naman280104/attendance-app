@@ -8,5 +8,12 @@ const createUniqueID = (n) => {
     return uuid;
 };
 
+const createClassroomCode = () =>{
+    const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const nanoid = customAlphabet(alphabet,7);
+    const uuid = nanoid();
+    return uuid;
+}
 
-module.exports = { createUniqueID };
+
+module.exports = { createUniqueID, createClassroomCode};

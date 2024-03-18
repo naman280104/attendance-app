@@ -12,17 +12,17 @@ const loginUser = async (req, res) => {
         const student = await Student.findOne({email: userData.email});
         console.log("student is",student);
         if(student!=null){
-            return res.status(200).send({ token: token, message: 'Login successful',email: student.email, name: student.name, roll_no: "", role: 'student'});
+            return res.status(200).json({ token: token, message: 'Login successful',email: student.email, name: student.name, roll_no: "", role: 'student'});
         }
         else{
             const student = await Student({email: userData.email,advertisement_id: advertisingId, name: userData.name,});
             await student.save();
-            return res.status(200).send({ token: token, message: 'Login successful Account created', email: student.email, name: student.name, roll_no: "", role: 'student'});
+            return res.status(200).json({ token: token, message: 'Login successful Account created', email: student.email, name: student.name, roll_no: "", role: 'student'});
         }
     }
     catch (error) {
         console.log(error);
-        return res.status(400).send({ message: 'Error' });
+        return res.status(400).json({ message: 'Error' });
     }
 };
 

@@ -26,6 +26,12 @@ const StudentSchema = new mongoose.Schema(
             trim: true,
             match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
         },
+        classrooms:  [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Classroom",
+            }
+        ]
     },
     {
         timestamps: true,

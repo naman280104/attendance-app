@@ -7,10 +7,10 @@ const updateProfile = async (req, res) => {
     console.log(email);
     try{
         await Student.updateOne({email: email}, {name: name, roll_no: roll_no});
-        res.status(200).send({message: 'Profile updated successfully.'});
+        res.status(200).json({message: 'Profile updated successfully.'});
     }
     catch(error){
-        return res.status(400).send({message: 'Error updating profile.'});
+        return res.status(400).json({message: 'Error updating profile.'});
     }
 }   
 
@@ -20,10 +20,10 @@ const getProfile = async (req, res) => {
         console.log(email); 
         const student = await Student.findOne({email: email});
         console.log(student);
-        return res.status(200).send({email: email,name: student.name, roll_no: student.roll_no,role: req.user.role,});
+        return res.status(200).json({email: email,name: student.name, roll_no: student.roll_no,role: req.user.role,});
     }
     catch(error){
-        return res.status(400).send({message: 'Error fetching profile.'});
+        return res.status(400).json({message: 'Error fetching profile.'});
     }
 }
 

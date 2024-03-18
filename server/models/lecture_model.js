@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+
 const LectureSchema = new mongoose.Schema(
     {
         lecture_code: {
@@ -7,17 +8,15 @@ const LectureSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-        lecture_name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        lecture_date: {
-            type: Date,
-            required: true,
-            trim: true,
-        },
         is_accepting: {
+            type: Boolean,
+            default: true,
+        },
+        attendance_count: {
+            type: Number,
+            default: 0,
+        },
+        is_accepting_live: {
             type: Boolean,
             default: true,
         },

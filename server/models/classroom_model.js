@@ -18,14 +18,13 @@ const ClassroomSchema = new mongoose.Schema(
             required: true,
             trim: true,
             unique: true,
+            minlength: 16,
+            maxlength: 16,
         },
         classroom_students: {
-            student_id: [
-                {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "Attendance",
-                }
-            ]
+            type: mongoose.Schema.Types.Map,
+            required: false,
+            default:{}
         },
         classroom_lectures: [
             {
@@ -33,6 +32,11 @@ const ClassroomSchema = new mongoose.Schema(
                 ref: "Lecture",
             }
         ],
+        teacher: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Teacher",
+            required: true
+        },
     },
     {
         timestamps: true,
