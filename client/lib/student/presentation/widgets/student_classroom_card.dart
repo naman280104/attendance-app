@@ -1,3 +1,4 @@
+import 'package:attendance/student/services/student_classroom_services.dart';
 import 'package:flutter/material.dart';
 import 'package:attendance/assets/constants/colors.dart';
 import 'package:flutter_awesome_bottom_sheet/flutter_awesome_bottom_sheet.dart';
@@ -6,16 +7,34 @@ import '../screens/student_classroom.dart';
 
 
 class StudentClassroomCard extends StatelessWidget {
-  final String classroomName, instructorName;
+  final String classroomName, classroomTeacher, classroomID;
   final Function deleteClassroomCallback;
 
-  const StudentClassroomCard({super.key,required this.classroomName,required this.instructorName,required this.deleteClassroomCallback});
+  void unenrollFromClassroom(context) async {
+    try {
+      var resp = await StudentClassroomServices.unenroll(context, classroomID);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resp["message"])));
+      deleteClassroomCallback();
+    }
+    catch (err) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err.toString())));
+    }
+    Navigator.pop(context);
+    return;
+  }
+
+  const StudentClassroomCard(
+      {super.key,
+      required this.classroomName,
+      required this.classroomTeacher,
+      required this.classroomID,
+      required this.deleteClassroomCallback});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: (){
-        Navigator.push(context, MaterialPageRoute(builder: (context)=>StudentClassroom(classroomName: classroomName,)));
+        Navigator.push(context, MaterialPageRoute(builder: (context)=>StudentClassroom(classroomName: classroomName, classroomID: classroomID,)));
       },
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -41,7 +60,7 @@ class StudentClassroomCard extends StatelessWidget {
                 ),
               ],
             ),
-            Text(instructorName,style: const TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
+            Text(classroomTeacher,style: const TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
           ],
         ),
       ),
@@ -54,9 +73,8 @@ class StudentClassroomCard extends StatelessWidget {
       height: 70,
       width: double.infinity,
       child: TextButton(
-        onPressed: (){
-          deleteClassroomCallback();
-          print("delete classroom");
+        onPressed: () {
+          unenrollFromClassroom(context);
         },
         child: Text("Unenroll",style: TextStyle(fontSize: 22,color: primaryBlack),),
       ),

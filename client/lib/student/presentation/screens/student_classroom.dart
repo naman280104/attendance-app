@@ -1,35 +1,117 @@
 import 'package:attendance/assets/constants/colors.dart';
+import 'package:attendance/student/services/student_authentication_services.dart';
+import 'package:attendance/student/services/student_broadcast_services.dart';
+import 'package:attendance/student/services/student_classroom_services.dart';
 import 'package:flutter/material.dart';
 
+String formatDDMMYYYY(String date) {
+  DateTime dateTime = DateTime.parse(date);
+  String formattedDate = '${dateTime.day}/${dateTime.month}/${dateTime.year}';  
+  return formattedDate;
+}
+
 class StudentClassroom extends StatefulWidget {
-  final String classroomName;
+  final String classroomName, classroomID;
 
   const StudentClassroom({
     super.key,
-    required this.classroomName
+    required this.classroomName,
+    required this.classroomID
   });
 
   @override
   State<StudentClassroom> createState() => _StudentClassroomState();
 }
 
-class _StudentClassroomState extends State<StudentClassroom> {
+class _StudentClassroomState extends State<StudentClassroom> with WidgetsBindingObserver {
 
-  String lastAttendanceDate = 'YYYY/MM/DD';
+  late final StudentBroadcastServices receiver;
+
+  bool reFetchAttendance = true;
+  Map<String, dynamic> attendanceInfo = {};
+  String lastUUID = "";
   bool fullAttendanceView = false;
-  List<dynamic> attendance = [
-    ['Lecture 1','2024-02-25','Present'],
-    ['Lecture 2','2024-02-26','Absent'],
-    ['Lecture 3','2024-02-27','Present']
-  ];
+
+  void reloadCallback() {
+    setState(() {});
+  }
+
+  Future<void> handleBeaconFound(String uuid) async {
+    try{
+      if (uuid != lastUUID) {
+        lastUUID = uuid;
+        String advID = await getAdvertisingId();
+        var resp = await StudentClassroomServices.markLiveAttendance(context, widget.classroomID, uuid, advID);
+        SnackBar sb = SnackBar(content: Text(resp['message']));
+        ScaffoldMessenger.of(context).showSnackBar(sb);
+        receiver.stopScan();
+        setState(() {
+          reFetchAttendance = true;
+        });
+      }
+    }
+    catch (err) {
+      String errMsg = err.toString();
+      SnackBar sb = SnackBar(content: Text(errMsg));
+      ScaffoldMessenger.of(context).showSnackBar(sb);
+      receiver.stopScan();
+    }
+  }
+
+  void handleMarkAttendance() async {
+    lastUUID = "";
+    if (receiver.isScanning) {
+      await receiver.stopScan();
+    } else {
+      try {
+        var resp = await StudentClassroomServices.getAttendanceBeaconIdentifier(context, widget.classroomID);
+        await receiver.startScan(resp['beacon_id']);
+      }
+      catch (err) {
+        SnackBar sb = SnackBar(content: Text(err.toString()));
+        ScaffoldMessenger.of(context).showSnackBar(sb);
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> getMyAttendance() async {
+    if (reFetchAttendance) {
+      attendanceInfo = await StudentClassroomServices.getMyAttendance(context, widget.classroomID);
+      reFetchAttendance = false;
+    }
+    return attendanceInfo;
+  }
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    receiver = StudentBroadcastServices(reloadCallback, handleBeaconFound);
+
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.classroomName,style: TextStyle(fontWeight: FontWeight.w700,fontSize: 24),),backgroundColor: classroomTileBg),
-      body:
-          fullAttendanceView == false ?
-      Column(
+  void dispose() {
+    receiver.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+
+  Widget showMarkAttendanceView() {
+    List<dynamic> attendance = attendanceInfo["attendance"];
+    String lastAttendanceDate = "";
+    for(int i=attendance.length-1; i>=0; i--) {
+      if (attendance[i]["is_present"]) {
+        lastAttendanceDate = attendanceInfo["attendance"][i]["date"];
+      }
+    }
+
+    String formattedDate = "";
+    if (lastAttendanceDate != "") formattedDate = formatDDMMYYYY(lastAttendanceDate);
+
+    
+    return Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
@@ -49,7 +131,13 @@ class _StudentClassroomState extends State<StudentClassroom> {
               ),
               child: Text('View Attendance',style: TextStyle(color: primaryBlack),)),
           ),
-          Text('Last Attendance on \n $lastAttendanceDate',textAlign: TextAlign.center,style: TextStyle(fontSize: 18),),
+          
+          formattedDate == ""
+          ? 
+          Text('No attendance marked.')
+          :
+          Text('Last Attendance on \n $formattedDate',textAlign: TextAlign.center,style: TextStyle(fontSize: 18),),
+          
           Container(
             margin: EdgeInsets.fromLTRB(0, 0, 0, 30),
             child: TextButton(
@@ -60,17 +148,27 @@ class _StudentClassroomState extends State<StudentClassroom> {
                   )
               ),
               onPressed: (){
-                print('Mark Attendance Button Pressed for course ${widget.classroomName}');
+                print('Mark Attendance Button Pressed for Classroom ${widget.classroomName}');
+                handleMarkAttendance();
               },
               child: Container(
                 padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                child: Text('Mark Attendance',style: TextStyle(fontSize: 21,color: primaryBlack),),
+                width: MediaQuery.of(context).size.width*0.6,
+                child: Center(
+                  child: receiver.isScanning ? CircularProgressIndicator() : Text('Mark Attendance',style: TextStyle(fontSize: 21,color: primaryBlack))
+                ),
               ),
             ),
           )
         ],
-      ) :
-      SingleChildScrollView(
+      );
+  }
+
+
+  Widget showFullAttendanceView() {
+    List<dynamic> attendance = attendanceInfo["attendance"];
+
+    return SingleChildScrollView(
         child: Column(
           children: [
             Container(
@@ -96,7 +194,7 @@ class _StudentClassroomState extends State<StudentClassroom> {
               ),
               child: DataTable(
                 columns: const [
-                  DataColumn(label: Text('Lecture')),
+                  DataColumn(label: Text('Name')),
                   DataColumn(label: Text('Date')),
                   DataColumn(label: Text('Attendance')),
                 ],
@@ -104,9 +202,9 @@ class _StudentClassroomState extends State<StudentClassroom> {
                   for(var i=0; i<attendance.length;i++) ...[
                     DataRow(
                       cells: [
-                        DataCell(Text(attendance[i][0])),
-                        DataCell(Text(attendance[i][1])),
-                        DataCell(Text(attendance[i][2])),
+                        DataCell(Text('Lecture ${i+1}')),
+                        DataCell(Text(formatDDMMYYYY(attendance[i]["date"]))),
+                        DataCell(Text(attendance[i]["is_present"] ? "Present" : "Absent")),
                       ]
                     ),
                   ]
@@ -116,7 +214,31 @@ class _StudentClassroomState extends State<StudentClassroom> {
             SizedBox(height: 20,)
           ],
         ),
-      ),
-    );
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.classroomName,style: TextStyle(fontWeight: FontWeight.w700,fontSize: 24),),backgroundColor: classroomTileBg),
+      body: FutureBuilder(
+        future: getMyAttendance(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Text(snapshot.error.toString());
+          }
+          if (snapshot.hasData) {
+            print(snapshot.data);
+            if (fullAttendanceView) {
+              return showFullAttendanceView();
+            }
+            return showMarkAttendanceView();
+          }
+          return Placeholder();
+        })
+      );
   }
 }

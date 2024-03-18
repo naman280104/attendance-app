@@ -1,4 +1,5 @@
 import 'package:attendance/assets/flutter_secure_storage.dart';
+import 'package:attendance/student/services/student_classroom_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:attendance/student/presentation/widgets/student_classroom_card.dart';
@@ -18,17 +19,33 @@ class StudentHome extends StatefulWidget {
 class _StudentHomeState extends State<StudentHome> {
 
   final TextEditingController newClassroomName = TextEditingController(); 
-  void deleteClassroomCallback(){}
+  
+  void deleteClassroomCallback(){
+    setState(() {});
+  }
+
   late final String username;
-  late final List<dynamic> classrooms;
+
+  Future<Map<String, dynamic>> fetchAllClassrooms() {
+    return StudentClassroomServices.getAllClassrooms(context);
+  }
+
+  void joinClassroomByCode(String classroomCode) async {
+    try{
+      Navigator.pop(context);
+      var resp = await StudentClassroomServices.joinClassroomByCode(context, classroomCode);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resp["message"])));
+      setState(() {});
+    }
+    catch (err) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err.toString())));
+    }
+    return;
+  }
 
   
   @override
   void initState(){
-    classrooms = [
-      {'classroomName': 'Classroom-1','instructorName':'Prof. A'},
-      {'classroomName': 'Classroom-2','instructorName':'Prof. B'}
-    ];
     super.initState();
   }
 
@@ -36,30 +53,50 @@ class _StudentHomeState extends State<StudentHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: StudentAppBar(),
-      body: Container(
-        padding: const EdgeInsets.only(top: 10),
-        child: ListView.builder(
-          itemCount: classrooms.length,
-          itemBuilder: (context,index){
-            return StudentClassroomCard(
-              classroomName: classrooms[index]['classroomName']!,
-              instructorName: classrooms[index]['instructorName']!,
-              deleteClassroomCallback: deleteClassroomCallback,
-            );
-          },
-        ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {});
+        },
+        child: FutureBuilder(
+            future: fetchAllClassrooms(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Text(snapshot.error.toString());
+              }
+              if (snapshot.hasData) {
+                var classrooms = snapshot.data?["classrooms"];
+                return Container(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: ListView.builder(
+                    itemCount: classrooms.length,
+                    itemBuilder: (context, index) {
+                      return StudentClassroomCard(
+                        classroomName: classrooms[index]['classroom_name']!,
+                        classroomTeacher: classrooms[index]['classroom_teacher']!,
+                        classroomID: classrooms[index]['classroom_id']!,
+                        deleteClassroomCallback: deleteClassroomCallback,
+                      );
+                    },
+                  ),
+                );
+              }
+              return Placeholder();
+            }),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
             context: context, 
             builder: (context) => AlertDialog(
-              title: Text('Course Name'),
+              title: Text('Classroom Code'),
               content: TextField(
                 controller: newClassroomName,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: "Enter Course Name",
+                  hintText: "Enter Classroom Code",
                 ),
               ),
               actions: [
@@ -70,9 +107,8 @@ class _StudentHomeState extends State<StudentHome> {
                         borderRadius: BorderRadius.circular(8),
                       )
                   ),
-                  onPressed: (){
-                    print(newClassroomName.text);
-                    Navigator.pop(context);
+                  onPressed: () {
+                    joinClassroomByCode(newClassroomName.text);
                   },
                   child: Text('Join',style: TextStyle(color: primaryBlack),)
                 )
