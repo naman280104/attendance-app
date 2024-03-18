@@ -44,49 +44,55 @@ class _TeacherHomeState extends State<TeacherHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: TeacherAppBar(),
-      body: FutureBuilder(
-          future: fetchClassrooms(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            }
-            if (snapshot.hasError) {
-              return Text(snapshot.error.toString());
-            }
-            if (snapshot.hasData) {
-              var classrooms = snapshot.data?["classrooms"];
-              print(classrooms);
-              return Container(
-                padding: const EdgeInsets.only(top: 10),
-                child: ListView.builder(
-                  itemCount: classrooms.length,
-                  itemBuilder: (context, index) {
-                    return TeacherClassroomCard(
-                      classroomName: classrooms[index]['classroom_name']!,
-                      numberOfStudents:
-                          classrooms[index]['no_of_students']!.toString(),
-                      classroomID:
-                          classrooms[index]['classroom_id']!.toString(),
-                      deleteClassroomCallback: deleteClassroomCallback,
-                      changeClassroomNameCallback: changeClassroomNameCallback,
-                    );
-                  },
-                ),
-              );
-            }
-            return Placeholder();
-          }),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {});
+        },
+        child: FutureBuilder(
+            future: fetchClassrooms(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Text(snapshot.error.toString());
+              }
+              if (snapshot.hasData) {
+                print(snapshot.data);
+                var classrooms = snapshot.data?["classrooms"];
+                print(classrooms);
+                return Container(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: ListView.builder(
+                    itemCount: classrooms.length,
+                    itemBuilder: (context, index) {
+                      return TeacherClassroomCard(
+                        classroomName: classrooms[index]['classroom_name']!,
+                        numberOfStudents:
+                            classrooms[index]['no_of_students']!.toString(),
+                        classroomID:
+                            classrooms[index]['classroom_id']!.toString(),
+                        deleteClassroomCallback: deleteClassroomCallback,
+                        changeClassroomNameCallback: changeClassroomNameCallback,
+                      );
+                    },
+                  ),
+                );
+              }
+              return Placeholder();
+            }),
+      ),
       floatingActionButton: FloatingActionButton(
           onPressed: () {
             showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                      title: Text('Course Name'),
+                      title: Text('Classroom Name'),
                       content: TextField(
                         controller: newClassroomCode,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          hintText: "Enter Course Name",
+                          hintText: "Enter Classroom Name",
                         ),
                       ),
                       actions: [
@@ -97,14 +103,14 @@ class _TeacherHomeState extends State<TeacherHome> {
                                   borderRadius: BorderRadius.circular(8),
                                 )),
                             onPressed: () async {
+                              Navigator.pop(context);
                               await TeacherClassroomServices.createClassroom(
                                   newClassroomCode.text, context);
                               print(newClassroomCode.text);
-                              Navigator.pop(context);
                               addClassroomCallback();
                             }, 
                             child: Text(
-                              'Add Course',
+                              'Add Classroom',
                               style: TextStyle(color: primaryBlack),
                             ))
                       ],

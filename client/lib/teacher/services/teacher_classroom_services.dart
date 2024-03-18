@@ -80,6 +80,7 @@ class TeacherClassroomServices {
     return {};
   }
 
+
   static Future<String> deleteClassroom(String classroomID, context) async {
     FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
     String? token = await secureStorage.readSecureData("token");
@@ -116,6 +117,7 @@ class TeacherClassroomServices {
     }
     return "";
   }
+
 
   static Future<Map<String,dynamic>> getClassroomInfo(String classroomID, context) async {
     FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
@@ -154,6 +156,7 @@ class TeacherClassroomServices {
     return {};
   }
 
+
   static Future<String> editClassroomName(String classroomID, String classroomName,context) async {
     FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
     String? token = await secureStorage.readSecureData("token");
@@ -191,6 +194,7 @@ class TeacherClassroomServices {
     return "";
   }
 
+
   static Future<Map<String,dynamic>> addLecture(String classroomID, context) async {
     FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
     String? token = await secureStorage.readSecureData("token");
@@ -210,17 +214,130 @@ class TeacherClassroomServices {
             headers: {'Authorization': token}
           );
           
+        var responseBody = json.decode(response.body);
+        
         if(response.statusCode==200){
-          var responseBody = json.decode(response.body);
           print(responseBody);
           return responseBody;
         }
         else{
-          return {"error" : "Error fetching details"};
+          throw(responseBody["message"]);
         }
       }
       catch(err){
-          return {"error" : "Error fetching details"};
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String, dynamic>> liveAttendance(
+      String classroomID, String lectureID, String action, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if (token == null) {
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (context) => AskRole()), (route) => false);
+    } else {
+      try {
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/live-attendance'),
+            body: {
+              'classroom_id': classroomID,
+              "lecture_id": lectureID,
+              "action": action
+            },
+            headers: {
+              'Authorization': token
+            });
+
+        var responseBody = json.decode(response.body);
+
+        if (response.statusCode == 200) {
+          print(responseBody);
+          return responseBody;
+        } else {
+          throw (responseBody["message"]);
+        }
+      } catch (err) {
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> getClassroomStudents(String classroomID, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.get(
+              Uri(
+                  scheme: 'http',
+                  host: hostIP,
+                  port: hostPort,
+                  path: '/teacher/get-classroom-students',
+                  queryParameters: {'classroom_id': classroomID}
+              ),
+              headers: {'Authorization': token},
+            );
+        var responseBody = json.decode(response.body);
+
+        if(response.statusCode==200){
+          return responseBody;
+        }
+        else{
+          throw(responseBody['message']);
+        }
+      }
+      catch(err){
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> getLectureAttendance(String classroomID, String lectureID, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.get(
+              Uri(
+                  scheme: 'http',
+                  host: hostIP,
+                  port: hostPort,
+                  path: '/teacher/get-lecture-attendance',
+                  queryParameters: {'classroom_id': classroomID, 'lecture_id': lectureID}
+              ),
+              headers: {'Authorization': token},
+            );
+        var responseBody = json.decode(response.body);
+
+        if(response.statusCode==200){
+          return responseBody;
+        }
+        else{
+          throw(responseBody['message']);
+        }
+      }
+      catch(err){
+        rethrow;
       }
     }
     return {};

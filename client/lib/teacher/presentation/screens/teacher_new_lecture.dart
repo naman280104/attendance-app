@@ -250,7 +250,7 @@ class _TeacherNewLectureState extends State<TeacherNewLecture> {
       TextButton(
         onPressed: (){
           if (!broadcasting) print('Broadcast Button Pressed for ${widget.classroomName}');
-          else print('Stop Button Pressed for Course ${widget.classroomName}');
+          else print('Stop Button Pressed for Classroom ${widget.classroomName}');
           setState(() {
             broadcasting = !broadcasting;
           });

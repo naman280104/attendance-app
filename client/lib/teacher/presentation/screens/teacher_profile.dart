@@ -61,13 +61,13 @@ class _TeacherProfileState extends State<TeacherProfile> {
           future: TeacherProfileServices.getProfileDetials(context),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
+              return Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else if (!snapshot.hasData) {
               return Text('No data available');
             } else {
-              print("in profile student");
+              print("in profile teacher");
               if (initial) {
                 profileData = snapshot.data!;
                 nameController =

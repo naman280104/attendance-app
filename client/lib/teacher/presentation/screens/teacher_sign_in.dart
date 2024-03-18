@@ -17,7 +17,7 @@ class TeacherSignIn extends StatelessWidget {
             const Text('Teacher Login',style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold),),
             SizedBox(height: MediaQuery.of(context).size.height*0.4,),
             SizedBox(
-              width: 280,
+              width: MediaQuery.of(context).size.width*0.8,
               height: 60,
               child: ElevatedButton(
                 onPressed: (){

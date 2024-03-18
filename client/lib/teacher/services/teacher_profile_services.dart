@@ -35,10 +35,11 @@ class TeacherProfileServices {
           print(responseBody);
           return responseBody;
         } else {
-          return {"error": "Error fetching detials"};
+          throw(json.decode(response.body)["message"]);
         }
       } catch (err) {
-        return {"error": "Error fetching detials"};
+        print(err);
+        rethrow;
       }
     }
     return {};
