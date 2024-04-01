@@ -205,4 +205,69 @@ class StudentClassroomServices {
     return {};
   }
 
+  static Future<Map<String, dynamic>> getInvites(context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if (token == null) {
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (context) => AskRole()), (route) => false);
+    } else {
+      try {
+        var response = await http.get(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/student/get-invites',
+            ),
+            headers: {'Authorization': token});
+
+        if (response.statusCode == 200) {
+          var responseBody = json.decode(response.body);
+          print(responseBody);
+          return responseBody;
+        } else {
+          throw (json.decode(response.body)["message"]);
+        }
+      } catch (err) {
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+  static Future<Map<String, dynamic>> respondToInvite(context, String inviteID, String studentResponse) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if (token == null) {
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (context) => AskRole()), (route) => false);
+    } else {
+      try {
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/student/respond-to-invite'
+            ),
+            body: {'invite_id': inviteID, 'student_response': studentResponse},
+            headers: {'Authorization': token});
+
+        if (response.statusCode == 200) {
+          var responseBody = json.decode(response.body);
+          print(responseBody);
+          return responseBody;
+        } else {
+          throw (json.decode(response.body)["message"]);
+        }
+      } catch (err) {
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
 }

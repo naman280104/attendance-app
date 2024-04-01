@@ -43,6 +43,8 @@ dependencies:
   provider: ^6.1.2
   beacon_broadcast: ^0.3.1
   flutter_blue_plus: ^1.31.13
+  excel: ^4.0.3
+  file_picker: ^8.0.0+1
 
 
 dev_dependencies:

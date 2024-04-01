@@ -73,6 +73,21 @@ class _LecturePageWhenAcceptingState extends State<LecturePageWhenAccepting> {
   var broadcasting = false;
   TextEditingController manuallyEnteredEmail = TextEditingController();
 
+  Future<void> markAttendanceByEmail(String student_email) async {
+    try {
+      String lectureID = widget.lectureInfo['lecture_id'];
+      var resp = await TeacherClassroomServices.addAttendanceByEmail(widget.classroomID, lectureID, student_email, context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resp['message'])));
+    }
+    catch (err) {
+      print(err);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err.toString())));
+    }
+    finally {
+      setState(() {});
+    }
+  }
+
   Future<Map<String, dynamic>> fetchLectureAttendance() {
     return TeacherClassroomServices.getLectureAttendance(widget.classroomID, widget.lectureInfo['lecture_id'], context);
   }
@@ -88,7 +103,6 @@ class _LecturePageWhenAcceptingState extends State<LecturePageWhenAccepting> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     broadcaster.dispose();
     super.dispose();
   }
@@ -235,9 +249,9 @@ class _LecturePageWhenAcceptingState extends State<LecturePageWhenAccepting> {
                                                 BorderRadius.circular(8),
                                           )),
                                       onPressed: () {
-                                        print(manuallyEnteredEmail.text);
-                                        manuallyEnteredEmail.clear();
                                         Navigator.pop(context);
+                                        markAttendanceByEmail(manuallyEnteredEmail.text);
+                                        manuallyEnteredEmail.clear();
                                       },
                                       child: Text(
                                         'Mark',
