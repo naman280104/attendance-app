@@ -23,6 +23,10 @@ const AttendanceSchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
+        marked_manually: {
+            type: Boolean,
+            default: false,
+        }
     },
     {
         timestamps: true,

@@ -13,10 +13,9 @@ teacher_route.post('/add-lecture', teacher_controller.addLecture);
 teacher_route.post('/live-attendance', teacher_controller.liveAttendance);
 teacher_route.get('/get-lecture-attendance', teacher_controller.getLectureAttendance);
 teacher_route.get('/get-classroom-students', teacher_controller.getClassroomStudents);
-// teacher_route.post('/add-attendance-by-email', teacher_controller.addAttendanceByEmail);
-// teacher_route.post('/add-student-by-email', teacher_controller.addStudentByEmail);
-// teacher_route.get('/get-student-info', teacher_controller.getStudentInfo);
-// teacher_route.post('/remove-student', teacher_controller.removeStudent);
+teacher_route.post('/send-invites',teacher_controller.sendInvites);
+teacher_route.post('/add-attendance-by-email', teacher_controller.addAttendanceByEmail);
+teacher_route.post('/remove-student', teacher_controller.removeStudent);
 
 
 

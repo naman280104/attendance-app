@@ -2,6 +2,9 @@ const Teacher = require('../models/teacher_model');
 const Classroom = require('../models/classroom_model');
 const Student = require('../models/student_model');
 const Lecture = require('../models/lecture_model');
+const Attendance = require('../models/attendance_model');
+const Invite = require('../models/invite_model');
+
 const {createUniqueID, createClassroomCode} = require('../services/uuid');
 
 
@@ -452,4 +455,215 @@ const getClassroomStudents = async (req,res) => {
     }
 }
 
-module.exports = {createClassroom, getTeacherClassrooms, deleteClassroom, getClassroomInfo, editClassroomName, addLecture, liveAttendance, getLectureAttendance, getClassroomStudents};
+
+const sendInvites = async (req,res) => {
+    try{
+        let {classroom_id, student_emails} = req.body;
+        console.log(student_emails);
+        student_emails = JSON.parse(student_emails);
+        console.log(student_emails);
+        console.log(typeof student_emails);
+        if(!classroom_id || !student_emails){
+            return res.status(400).json({message: 'Classroom id and student emails are required'});
+        }
+
+        const teacher = await Teacher.findOne({email: req.user.email});
+        if(!teacher){
+            return res.status(404).json({message: 'Teacher not found'});
+        }
+        let classroom_found = false;
+        teacher.classrooms.forEach((classroom) => {
+            if(classroom._id == classroom_id){
+                classroom_found = true;
+            }
+        });
+        if(!classroom_found){
+            return res.status(400).json({message: 'Classroom does not belong to teacher'});
+        }
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+        
+        let count_student_not_found = 0;
+        let count_already_in_class = 0;
+        for(let i = 0; i < student_emails.length; i++){
+            const student = await Student.findOne({email: student_emails[i]});
+            if(!student){
+                count_student_not_found++;
+                continue;
+            }
+            const student_id = student._id;
+            if(classroom.classroom_students.get(student_id)){
+                count_already_in_class++;
+                continue;
+            }
+            const invite_present = await Invite.findOne({classroom_id: classroom_id, student_id: student_id});
+            if(invite_present){
+                continue;
+            }
+            const invite = await Invite.create({
+                classroom_id: classroom_id,
+                student_id: student_id,
+            });
+            console.log(invite);
+            await invite.save();
+        }
+        let count_invites_sent = student_emails.length - count_student_not_found - count_already_in_class;
+
+        return res.status(200).json({message: 'Invites sent successfully', count_student_not_found: count_student_not_found, count_already_in_class: count_already_in_class, count_invites_sent: count_invites_sent});
+    } catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+
+const addAttendanceByEmail = async (req,res) => {
+    try{
+        const {classroom_id, student_email, lecture_id} = req.body;
+        console.log(classroom_id, student_email, lecture_id);
+        if(!classroom_id || !student_email || !lecture_id){
+            return res.status(400).json({message: 'Classroom id, student email and lecture id are required'});
+        }
+
+        const teacher = await Teacher.findOne({email: req.user.email});
+        if(!teacher){
+            return res.status(404).json({message: 'Teacher not found'});
+        }
+
+        let classroom_found = false;
+        teacher.classrooms.forEach((classroom) => {
+            if(classroom._id == classroom_id){
+                classroom_found = true;
+            }
+        });
+
+        if(!classroom_found){
+            return res.status(400).json({message: 'Classroom does not belong to teacher'});
+        }
+
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        const lecture = await Lecture.findById(lecture_id);
+        if(!lecture){
+            return res.status(404).json({message: 'Lecture not found'});
+        }
+
+        let lecture_in_classroom = false;
+        classroom.classroom_lectures.forEach((lecture) => {
+            if(lecture == lecture_id){
+                lecture_in_classroom = true;
+            }
+        });
+
+        if(!lecture_in_classroom){
+            return res.status(400).json({message: 'Lecture does not belong to classroom'});
+        }
+
+        const student = await Student.findOne({email: student_email});
+
+        if(!student){
+            return res.status(404).json({message: 'Student not found'});
+        }
+
+
+        const attendance_present = await Attendance.findOne({student_id: student._id, lecture_id: lecture_id});
+        if(attendance_present){
+            return res.status(400).json({message: 'Attendance already marked'});
+        }
+
+        const attendance = await Attendance.create({
+            advertisement_id: 'MARKED_MANUALLY',
+            student_id: student._id,
+            lecture_id: lecture._id,
+            marked_manually: true,
+        });
+
+        await attendance.save();
+        
+        const updatedClassroom = await Classroom.findOneAndUpdate(
+            { _id: classroom._id, [`classroom_students.${student._id}`] : { $exists: true } },
+            { $push: { [`classroom_students.${student._id}`]: {attendance_id: attendance._id, lecture_id: lecture._id} } },
+          );
+
+        console.log(updatedClassroom);
+
+        return res.status(200).json({message: 'Attendance marked successfully'});
+        
+    } catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+
+}
+
+
+const removeStudent = async (req,res) => {
+    try{
+        const {classroom_id, student_email} = req.body;
+        console.log(classroom_id, student_email);    
+        if(!classroom_id || !student_email){
+            return res.status(400).json({message: 'Classroom id and student email are required'});
+        }
+
+        const teacher = await Teacher.findOne({email: req.user.email});
+        if(!teacher){
+            return res.status(404).json({message: 'Teacher not found'});
+        }
+
+        let classroom_found = false;
+        teacher.classrooms.forEach((classroom) => {
+            if(classroom._id == classroom_id){
+                classroom_found = true;
+            }
+        });
+
+        if(!classroom_found){
+            return res.status(400).json({message: 'Classroom does not belong to teacher'});
+        }
+
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        const student = await Student.findOne({email: student_email});
+        if(!student){
+            return res.status(404).json({message: 'Student not found'});
+        }
+
+        const student_id = student._id;
+        const student_in_classroom = classroom.classroom_students.get(student_id);
+        if(!student_in_classroom){
+            return res.status(400).json({message: 'Student not in classroom'});
+        }
+
+        classroom.classroom_students.delete(student._id);
+        await classroom.save();
+        student.classrooms = student.classrooms.filter(id => id != classroom_id);
+        await student.save();
+        console.log(student);
+        return res.status(200).json({message: 'Student removed successfully'});
+    } catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+module.exports = {
+    createClassroom,
+    getTeacherClassrooms,
+    deleteClassroom,
+    getClassroomInfo,
+    editClassroomName,
+    addLecture,
+    liveAttendance,
+    getLectureAttendance,
+    getClassroomStudents,
+    sendInvites,
+    addAttendanceByEmail,
+    removeStudent
+};
