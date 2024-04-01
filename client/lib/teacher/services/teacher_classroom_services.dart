@@ -343,4 +343,119 @@ class TeacherClassroomServices {
     return {};
   }
 
+
+  static Future<Map<String,dynamic>> sendInvites(String classroomID, List<String> studentEmails, context) async {
+    print(studentEmails);
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/send-invites'
+            ),
+            body: {'classroom_id': classroomID, 'student_emails': jsonEncode(studentEmails)},
+            headers: {'Authorization': token}
+          );
+          
+        var responseBody = json.decode(response.body);
+        
+        if(response.statusCode==200){
+          print(responseBody);
+          return responseBody;
+        }
+        else{
+          throw(responseBody["message"]);
+        }
+      }
+      catch(err){
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> addAttendanceByEmail(String classroomID, String lectureID, String studentEmail, context) async {
+    // print(studentEmails);
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/add-attendance-by-email'
+            ),
+            body: {'classroom_id': classroomID, 'lecture_id': lectureID, 'student_email': studentEmail},
+            headers: {'Authorization': token}
+          );
+          
+        var responseBody = json.decode(response.body);
+        
+        if(response.statusCode==200){
+          print(responseBody);
+          return responseBody;
+        }
+        else{
+          throw(responseBody["message"]);
+        }
+      }
+      catch(err){
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> removeStudent(String classroomID, String studentEmail, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/remove-student'
+            ),
+            body: {'classroom_id': classroomID, 'student_email': studentEmail},
+            headers: {'Authorization': token}
+          );
+          
+        var responseBody = json.decode(response.body);
+        
+        if(response.statusCode==200){
+          print(responseBody);
+          return responseBody;
+        }
+        else{
+          throw(responseBody["message"]);
+        }
+      }
+      catch(err){
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
 }

@@ -1,4 +1,6 @@
 import 'package:attendance/teacher/services/teacher_classroom_services.dart';
+import 'package:excel/excel.dart' as Excel;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -15,29 +17,77 @@ class StudentList extends StatefulWidget {
 }
 
 class _StudentListState extends State<StudentList> {
-  // List<dynamic> students = [
-  //   ['ABC', 'Roll No.1', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.2', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.3', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.4', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.5', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.6', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.7', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.8', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.9', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.10', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.11', 'abc@abc.abc'],
-  //   ['ABC', 'Roll No.12', 'abc@abc.abc'],
-  // ];
 
   Future<Map<String, dynamic>> fetchClassroomStudents() {
-    return TeacherClassroomServices.getClassroomStudents(
-        widget.classroomID, context);
+    return TeacherClassroomServices.getClassroomStudents(widget.classroomID, context);
+  }
+
+  Future<void> handleRemoveStudent(String studentEmail) async {
+    try {
+      var resp = await TeacherClassroomServices.removeStudent(widget.classroomID, studentEmail, context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resp['message'])));
+    }
+    catch (err) {
+      print(err);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err.toString()),));
+    }
+    finally {
+      setState(() {});
+    }
+  }
+
+  void handleAddExcel() async {
+
+    try{
+      FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+        allowMultiple: false,
+        withData: true,
+      );
+      
+      List<String> studentEmails = [];
+
+      if (pickedFile != null) {
+        var bytes = pickedFile.files.single.bytes!.toList();
+        var excel = Excel.Excel.decodeBytes(bytes);
+        var table = excel.tables[excel.tables.keys.first];
+
+        for (var row in table!.rows) {
+          print('....................');
+          print(row);
+          String email = row[0]!.value.toString();
+          studentEmails.add(email);
+        }
+      }
+
+      print(studentEmails);
+
+      var resp = await TeacherClassroomServices.sendInvites(widget.classroomID, studentEmails, context);
+      print(resp);
+
+      int countAlreadyInClass = resp['count_already_in_class'];
+      // int countStudentNotFound = resp['count_student_not_found'];
+      int countInvitesSent = resp['count_invites_sent'];
+
+
+      Widget inviteResult = Column(
+        children: [
+          Text('${countInvitesSent} invites sent.'),
+          Text('${countAlreadyInClass} students already in class.'),
+        ],
+      );
+      var snackBar = SnackBar(content: inviteResult);
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    } catch (err) {
+      print(err);
+      var snackBar = SnackBar(content: Text(err.toString()));
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController newStudentEmailController = TextEditingController();
     return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -58,8 +108,8 @@ class _StudentListState extends State<StudentList> {
               }
 
               if (snapshot.hasData) {
-                print("................................");
-                print(snapshot.data);
+                // print("................................");
+                // print(snapshot.data);
 
                 List<dynamic> students = snapshot.data?['students'];
 
@@ -74,49 +124,9 @@ class _StudentListState extends State<StudentList> {
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
-                      Container(
-                        margin: EdgeInsets.fromLTRB(20, 10, 20, 10),
-                        child: TextField(
-                          controller: newStudentEmailController,
-                          onSubmitted: (val) {
-                            showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                      title: Text('Add Student'),
-                                      content: Text('email: $val'),
-                                      actions: [
-                                        TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            child: Text(
-                                              'Cancel',
-                                              style: TextStyle(
-                                                  color: primaryBlack),
-                                            )),
-                                        TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                              print(
-                                                  'Add student with email $val');
-                                              setState(() {});
-                                            },
-                                            child: Text(
-                                              'Add',
-                                              style: TextStyle(
-                                                  color: Colors.green),
-                                            )),
-                                      ],
-                                    ));
-                            newStudentEmailController.clear();
-                          },
-                          decoration: InputDecoration(
-                              suffixIcon: Icon(Icons.add),
-                              hintText: 'Student Email',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: primaryBlack))),
-                        ),
+                      IconButton(
+                        icon: Icon(Icons.mail),
+                        onPressed: handleAddExcel,
                       ),
                       Container(
                         alignment: Alignment.centerLeft,
@@ -164,10 +174,9 @@ class _StudentListState extends State<StudentList> {
                                                       )),
                                                   TextButton(
                                                       onPressed: () {
+                                                        print('remove..................');
                                                         Navigator.pop(context);
-                                                        print(
-                                                            'Remove student at index $i');
-                                                        setState(() {});
+                                                        handleRemoveStudent(students[i]["student_email"]);
                                                       },
                                                       child: Text(
                                                         'Remove',
