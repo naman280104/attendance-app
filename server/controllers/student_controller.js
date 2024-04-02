@@ -216,13 +216,16 @@ const markLiveAttendance = async (req,res) => {
                 });
 
                 await attendance.save();
+
+                lecture.attendance_count++;
+                await lecture.save();
                 
                 const updatedClassroom = await Classroom.findOneAndUpdate(
                     { _id: classroom._id, [`classroom_students.${student._id}`] : { $exists: true } },
                     { $push: { [`classroom_students.${student._id}`]: {attendance_id: attendance._id, lecture_id: lecture._id} } },
                   );
 
-                console.log(updatedClassroom)
+                console.log(updatedClassroom);
 
                 return res.status(200).json({message: 'Attendance marked successfully'});
             }

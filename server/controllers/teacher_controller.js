@@ -584,6 +584,9 @@ const addAttendanceByEmail = async (req,res) => {
         });
 
         await attendance.save();
+
+        lecture.attendance_count++;
+        await lecture.save();
         
         const updatedClassroom = await Classroom.findOneAndUpdate(
             { _id: classroom._id, [`classroom_students.${student._id}`] : { $exists: true } },
@@ -653,6 +656,79 @@ const removeStudent = async (req,res) => {
         res.status(500).json({message: 'Internal server error'});
     }
 }
+
+
+const getAttendanceReport = async (req, res) => {
+  try {
+    const { classroom_id } = req.query;
+
+    if (!classroom_id) {
+      return res.status(400).json({ message: "Classroom id is required" });
+    }
+
+    const teacher = await Teacher.findOne({ email: req.user.email });
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher not found" });
+    }
+
+    let classroom_found = false;
+    teacher.classrooms.forEach((classroom) => {
+      if (classroom._id == classroom_id) {
+        classroom_found = true;
+      }
+    });
+
+    if (!classroom_found) {
+      return res.status(400).json({ message: "Classroom does not belong to teacher" });
+    }
+
+    const classroom = await Classroom.findById(classroom_id);
+    if (!classroom) {
+      return res.status(404).json({ message: "Classroom not found" });
+    }
+
+    const student_ids = Array.from(classroom.classroom_students.keys());
+
+    let attendance_report = {};
+
+    const all_lectures = classroom.classroom_lectures;
+
+    for (let i = 0; i < student_ids.length; i++) {
+      const student_attendance = classroom.classroom_students.get(student_ids[i]);
+
+      let student_attendance_for_all_lectures = Array.from(
+        { length: all_lectures.length },
+        () => false
+      );
+
+      for (let j = 0; j < all_lectures.length; j++) {
+        for (let k = 0; k < student_attendance.length; k++) {
+          if (student_attendance[k].lecture_id.toString() ==all_lectures[j].toString()) {
+            student_attendance_for_all_lectures[j] = true;
+            break;
+          }
+        }
+      }
+
+      const student = await Student.findById(student_ids[i]);
+      attendance_report[student.email] = {
+        name: student.name,
+        roll_no: student.roll_no,
+        attendance: student_attendance_for_all_lectures,
+      };
+    }
+
+    console.log(attendance_report);
+    return res.status(200).json({ attendance_report: attendance_report });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
 module.exports = {
     createClassroom,
     getTeacherClassrooms,
@@ -665,5 +741,6 @@ module.exports = {
     getClassroomStudents,
     sendInvites,
     addAttendanceByEmail,
-    removeStudent
+    removeStudent,
+    getAttendanceReport
 };

@@ -16,6 +16,7 @@ teacher_route.get('/get-classroom-students', teacher_controller.getClassroomStud
 teacher_route.post('/send-invites',teacher_controller.sendInvites);
 teacher_route.post('/add-attendance-by-email', teacher_controller.addAttendanceByEmail);
 teacher_route.post('/remove-student', teacher_controller.removeStudent);
+teacher_route.get('/get-attendance-report', teacher_controller.getAttendanceReport);
 
 
 
