@@ -116,17 +116,31 @@ class _StudentListState extends State<StudentList> {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
+                      Row(
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.fromLTRB(20, 15, 20, 5),
+                            child: const Text(
+                              'Add Students',
+                              style: TextStyle(fontSize: 20),
+                            ),
+                          ),
+                          IconButton(
+                            padding: EdgeInsets.fromLTRB(0, 10, 40, 0),
+                            icon: Icon(Icons.file_upload),
+                            onPressed: handleAddExcel,
+                          ),
+                        ],
+                      ),
                       Container(
                         alignment: Alignment.centerLeft,
-                        padding: EdgeInsets.fromLTRB(20, 15, 20, 5),
+                        padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
                         child: const Text(
-                          'Add Student',
-                          style: TextStyle(fontSize: 16),
+                          'Add students by uploading an excel sheet with student emails.',
+                          style: TextStyle(fontSize: 12),
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.mail),
-                        onPressed: handleAddExcel,
                       ),
                       Container(
                         alignment: Alignment.centerLeft,

@@ -1,10 +1,16 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:attendance/teacher/presentation/screens/teacher_course_students_list.dart';
 import 'package:attendance/teacher/presentation/screens/teacher_new_lecture.dart';
 import 'package:attendance/teacher/presentation/widgets/teacher_classroom_app_bar.dart';
 import 'package:attendance/teacher/presentation/widgets/teacher_lecture_tile.dart';
 import 'package:attendance/teacher/services/teacher_classroom_services.dart';
+import 'package:excel/excel.dart' as Excel;
 import 'package:flutter/material.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:http/http.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../assets/constants/colors.dart';
 
@@ -26,10 +32,104 @@ class TeacherClassroom extends StatefulWidget {
 class _TeacherClassroomState extends State<TeacherClassroom> {
 
   late String classroomCode, classroomName, beaconID;
+  bool isGenerating = false;
 
   Future<Map<String, dynamic>> fetchClassroomInfo() {
     // return Future.delayed(Duration(seconds: 2), () { return {"1": "2"}; });
     return TeacherClassroomServices.getClassroomInfo(widget.classroomID, context);
+  }
+
+  void handleGenerateReport() async {
+    if (isGenerating) return;
+    try {
+      isGenerating = true;
+      var resp = await TeacherClassroomServices.getAttendanceReport(widget.classroomID, context);
+      print(resp);
+
+      var report = resp['attendance_report'];
+
+      List<String> studentEmails = report.keys.toList();
+      int n = studentEmails.length;
+
+      if (n == 0) {
+        throw('No students in the classroom yet!');
+      }
+
+      int noOfLec = report[studentEmails[0]]['attendance'].length;
+
+      var excel = Excel.Excel.createExcel();
+      var sheetObject = excel['Sheet1'];
+
+      List<Excel.CellValue> columnHeaders = [
+        Excel.TextCellValue('Name'),
+        Excel.TextCellValue('Email'),
+        Excel.TextCellValue('Roll No'),
+        ...List.generate(noOfLec, (idx) => Excel.TextCellValue('Lecture ${idx+1}')),
+        Excel.TextCellValue('Attendance Percentage'),
+      ];
+
+      sheetObject.appendRow(columnHeaders);
+
+      for (int i=0; i<n; i++) {
+        var attendanceInfo = report[studentEmails[i]];
+        // print(attendanceInfo['attendance']);
+        // print(attendanceInfo['attendance'].runtimeType);
+        // continue;
+
+        List<Excel.IntCellValue> attendanceList = List.generate(noOfLec, (idx) => Excel.IntCellValue(attendanceInfo['attendance'][idx] ? 1 : 0));
+
+        int presentIn = attendanceList.where((item) => item.value==1).length;
+        double attendancePercentage = 100.0 * presentIn / attendanceList.length;
+        attendancePercentage = (attendancePercentage * 100).roundToDouble() / 100;
+
+        List<Excel.CellValue> infoRow = [
+          Excel.TextCellValue('${attendanceInfo['name']}'),
+          Excel.TextCellValue('${studentEmails[i]}'),
+          Excel.TextCellValue('${attendanceInfo['roll_no']}'),
+          ...attendanceList,
+          Excel.DoubleCellValue(attendancePercentage),
+        ];
+        print(infoRow);
+        sheetObject.appendRow(infoRow);
+      }
+
+      var fileBytes = excel.save();
+
+      String classroomNameWithoutSpaces = widget.classroomName.replaceAll(' ', '_');
+      DateTime now = DateTime.now();
+      String convertedDateTime = "${now.year.toString()}-${now.month.toString().padLeft(2,'0')}-${now.day.toString().padLeft(2,'0')}_${now.hour.toString().padLeft(2,'0')}-${now.minute.toString().padLeft(2,'0')}";
+
+      String outputFileName = '${classroomNameWithoutSpaces}_${convertedDateTime}';
+
+      final pickedDirectory = await FlutterFileDialog.pickDirectory();
+
+      if (pickedDirectory != null) {
+        final filePath = await FlutterFileDialog.saveFileToDirectory(
+          directory: pickedDirectory,
+          data: Uint8List.fromList(fileBytes!),
+          fileName: outputFileName,
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          replace: true,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: Duration(seconds: 2),
+            content: Text('Excel file $outputFileName saved to ${filePath}')
+          )
+        );
+
+      }
+      
+
+    }
+    catch (err) {
+      print(err);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err.toString()),));
+    }
+    finally {
+      isGenerating = false;
+    }
   }
 
   void handleAddLecture() async {
@@ -98,8 +198,15 @@ class _TeacherClassroomState extends State<TeacherClassroom> {
                                       BorderSide(color: primaryBlack, width: 1))),
                           width: MediaQuery.of(context).size.width,
                           padding: EdgeInsets.fromLTRB(25, 15, 30, 15),
-                          margin: EdgeInsets.only(bottom: 30),
                           child: Text('Classroom Code: ${snapshot.data!["classroom_code"]}'),
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(top: 15,bottom: 10),
+                          child: ElevatedButton.icon(
+                            onPressed: handleGenerateReport,
+                            icon: Icon(Icons.file_download, color: Colors.green.shade800),
+                            label: Text('Generate Attendance Report', style: TextStyle(color: Colors.green.shade800))
+                          )
                         ),
                         // Add Lecture
                         ElevatedButton(

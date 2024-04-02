@@ -46,6 +46,7 @@ class TeacherClassroomServices {
     return {};
   }
 
+
   static Future<Map<String,dynamic>> getClassrooms(context) async {
     FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
     String? token = await secureStorage.readSecureData("token");
@@ -458,4 +459,40 @@ class TeacherClassroomServices {
     }
     return {};
   }
+
+
+  static Future<Map<String,dynamic>> getAttendanceReport(String classroomID, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.get(
+              Uri(
+                  scheme: 'http',
+                  host: hostIP,
+                  port: hostPort,
+                  path: '/teacher/get-attendance-report',
+                  queryParameters: {'classroom_id': classroomID}
+              ),
+              headers: {'Authorization': token},
+            );
+        var responseBody = json.decode(response.body);
+
+        if(response.statusCode==200){
+          return responseBody;
+        }
+        else{
+          throw(responseBody['message']);
+        }
+      }
+      catch(err){
+        rethrow;
+      }
+    }
+    return {};
+  }
+
 }
