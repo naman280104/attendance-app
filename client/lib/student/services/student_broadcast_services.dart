@@ -24,7 +24,13 @@ class StudentBroadcastServices {
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
       for(int i=0; i<results.length; i++) {
         var item = results[i];
+        print(item);
         var md = item.advertisementData.manufacturerData;
+
+        if (md.keys.toList().isEmpty) {
+          continue;
+        }
+        
         int k = md.keys.toList()[0];
 
         if (md[k]!.length >= 18) {

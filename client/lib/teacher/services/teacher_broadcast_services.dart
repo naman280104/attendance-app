@@ -17,7 +17,7 @@ class TeacherBroadcastServices {
   static const String identifier = 'com.beacon';
   static const AdvertiseMode advertiseMode = AdvertiseMode.lowLatency;
   static const String layout = BeaconBroadcast.ALTBEACON_LAYOUT;
-  static const int manufacturerId = 0x0118;
+  static const int manufacturerId = 0x004c;
   static const List<int> extraData = [123];
 
 
@@ -40,6 +40,8 @@ class TeacherBroadcastServices {
   }
 
   Future<void> handleStartBroadcast(BuildContext context, String uuidToSet) async {
+
+    uuidToSet = "${uuidToSet.substring(0,8)}-${uuidToSet.substring(8,12)}-${uuidToSet.substring(12,16)}-${uuidToSet.substring(16,20)}-${uuidToSet.substring(20)}";
     await beaconBroadcast
         .setUUID(uuidToSet)
         .setMajorId(majorId)
@@ -47,7 +49,7 @@ class TeacherBroadcastServices {
         .setTransmissionPower(transmissionPower)
         .setAdvertiseMode(advertiseMode)
         .setIdentifier(identifier)
-        .setLayout(layout)
+        .setLayout('m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24')
         .setManufacturerId(manufacturerId)
         .setExtraData(extraData)
         .start();

@@ -28,7 +28,12 @@ class StudentAuthenticationServices{
       final String googleToken = googleAuth.accessToken!;
       print(googleToken);
       String advertisingId = await getAdvertisingId();
-      var res = await http.post(Uri(scheme:'http', host: hostIP ,port: hostPort ,path: '/student/auth/login'), body: {'googleToken': googleToken,'advertisingId':advertisingId});
+      var res = await http.post(Uri(
+        scheme:'http',
+        host: hostIP,
+        port: hostPort,
+        path: '/student/auth/login'),
+        body: {'googleToken': googleToken, 'advertisingId':advertisingId});
       if(res.statusCode == 200){
         FlutterSecureStorageClass securestorage = FlutterSecureStorageClass();
         Map<String, dynamic> responseBody = json.decode(res.body);
@@ -65,7 +70,8 @@ class StudentAuthenticationServices{
 Function getAdvertisingId = () async {
     bool? isLimitAdTrackingEnabled;
     try {
-      isLimitAdTrackingEnabled = await AdvertisingId.isLimitAdTrackingEnabled;
+      isLimitAdTrackingEnabled = await AdvertisingId.isLimitAdTrackingEnabled;String? advertisingId = await AdvertisingId.id(true);
+      print(advertisingId);
     } on PlatformException {
       isLimitAdTrackingEnabled = false;
     }
