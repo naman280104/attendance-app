@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:attendance/teacher/presentation/screens/teacher_course_students_list.dart';
 import 'package:attendance/teacher/presentation/screens/teacher_new_lecture.dart';
+import 'package:attendance/teacher/presentation/screens/teacher_quiz.dart';
 import 'package:attendance/teacher/presentation/widgets/teacher_classroom_app_bar.dart';
 import 'package:attendance/teacher/presentation/widgets/teacher_lecture_tile.dart';
 import 'package:attendance/teacher/services/teacher_classroom_services.dart';
 import 'package:excel/excel.dart' as Excel;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:http/http.dart';
@@ -120,8 +122,6 @@ class _TeacherClassroomState extends State<TeacherClassroom> {
         );
 
       }
-      
-
     }
     catch (err) {
       print(err);
@@ -198,7 +198,19 @@ class _TeacherClassroomState extends State<TeacherClassroom> {
                                       BorderSide(color: primaryBlack, width: 1))),
                           width: MediaQuery.of(context).size.width,
                           padding: EdgeInsets.fromLTRB(25, 15, 30, 15),
-                          child: Text('Classroom Code: ${snapshot.data!["classroom_code"]}'),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                flex: 1,
+                                child: Text('Classroom Code: ${snapshot.data!["classroom_code"]}')
+                              ),
+                              OutlinedButton(
+                                onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => TeacherQuiz(classroomID: widget.classroomID, classroomName: widget.classroomName)));},
+                                child: Text("Quiz")
+                              )
+                            ],
+                          ),
                         ),
                         Container(
                           margin: EdgeInsets.only(top: 15,bottom: 10),

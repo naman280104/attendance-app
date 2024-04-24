@@ -1,4 +1,5 @@
 import 'package:attendance/assets/constants/colors.dart';
+import 'package:attendance/student/presentation/screens/student_quiz.dart';
 import 'package:attendance/student/services/student_authentication_services.dart';
 import 'package:attendance/student/services/student_broadcast_services.dart';
 import 'package:attendance/student/services/student_classroom_services.dart';
@@ -64,10 +65,12 @@ class _StudentClassroomState extends State<StudentClassroom> with WidgetsBinding
       await receiver.stopScan();
     } else {
       try {
-        var resp = await StudentClassroomServices.getAttendanceBeaconIdentifier(context, widget.classroomID);
+        var resp = await StudentClassroomServices.getBeaconIdentifier(context, widget.classroomID);
         await receiver.startScan(resp['beacon_id']);
       }
       catch (err) {
+        // print(err);
+        debugPrint(err.toString());
         SnackBar sb = SnackBar(content: Text(err.toString()));
         ScaffoldMessenger.of(context).showSnackBar(sb);
       }
@@ -114,22 +117,40 @@ class _StudentClassroomState extends State<StudentClassroom> with WidgetsBinding
     return Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            alignment: Alignment.centerRight,
-            margin: EdgeInsets.fromLTRB(0, 15, 15, 20),
-            child: TextButton(
-              onPressed: () {
-                setState(() {
-                  fullAttendanceView = true;
-                });
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: Color(0xFFEEEEEE),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                )
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                margin: EdgeInsets.fromLTRB(15, 15, 15, 20),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => StudentQuizView(classroomID: widget.classroomID,)));
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: complementaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    )
+                  ),
+                  child: Text('Attempt Quiz',style: TextStyle(color: primaryBlack),)),
               ),
-              child: Text('View Attendance',style: TextStyle(color: primaryBlack),)),
+              Container(
+                margin: EdgeInsets.fromLTRB(15, 15, 15, 20),
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      fullAttendanceView = true;
+                    });
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Color(0xFFEEEEEE),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    )
+                  ),
+                  child: Text('View Attendance',style: TextStyle(color: primaryBlack),)),
+              ),
+            ],
           ),
           
           formattedDate == ""

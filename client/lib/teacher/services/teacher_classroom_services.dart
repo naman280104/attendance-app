@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:attendance/ask_role.dart';
 import 'dart:convert';
 import 'package:attendance/assets/flutter_secure_storage.dart';
@@ -476,6 +479,202 @@ class TeacherClassroomServices {
                   port: hostPort,
                   path: '/teacher/get-attendance-report',
                   queryParameters: {'classroom_id': classroomID}
+              ),
+              headers: {'Authorization': token},
+            );
+        var responseBody = json.decode(response.body);
+
+        if(response.statusCode==200){
+          return responseBody;
+        }
+        else{
+          throw(responseBody['message']);
+        }
+      }
+      catch(err){
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> addQuiz(String classroomID, String quizName, String noOfQues, String filePath, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var request = http.MultipartRequest(
+          'POST',
+          Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/add-quiz'
+            ),
+        );
+
+        request.headers.addAll({
+          'Authorization': token,
+          'Content-Encoding': 'application/gzip'
+          });
+
+        request.fields.addAll({
+          'classroom_id': classroomID,
+          'quiz_name': quizName,
+          'no_of_questions': noOfQues,
+        });
+        request.files.add(await http.MultipartFile.fromPath("file", filePath));
+        var response = await request.send();
+          
+        var responseBody = json.decode(await response.stream.bytesToString());
+        
+        if(response.statusCode==200){
+          print(responseBody);
+          return responseBody;
+        }
+        else{
+          throw(responseBody["message"]);
+        }
+      }
+      catch(err){
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> getAllQuizzes(String classroomID, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.get(
+              Uri(
+                  scheme: 'http',
+                  host: hostIP,
+                  port: hostPort,
+                  path: '/teacher/get-all-quizzes',
+                  queryParameters: {'classroom_id': classroomID}
+              ),
+              headers: {'Authorization': token},
+            );
+        var responseBody = json.decode(response.body);
+
+        if(response.statusCode==200){
+          return responseBody;
+        }
+        else{
+          throw(responseBody['message']);
+        }
+      }
+      catch(err){
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> removeQuiz(String classroomID, String quizID, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/remove-quiz'
+            ),
+            body: {'classroom_id': classroomID, 'quiz_id': quizID},
+            headers: {'Authorization': token}
+          );
+          
+        var responseBody = json.decode(response.body);
+        
+        if(response.statusCode==200){
+          print(responseBody);
+          return responseBody;
+        }
+        else{
+          throw(responseBody["message"]);
+        }
+      }
+      catch(err){
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> changeQuizState(String classroomID, String quizID, String action, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/teacher/change-quiz-state'
+            ),
+            body: {'classroom_id': classroomID, 'quiz_id': quizID, 'action': action},
+            headers: {'Authorization': token}
+          );
+          
+        var responseBody = json.decode(response.body);
+        
+        if(response.statusCode==200){
+          print(responseBody);
+          return responseBody;
+        }
+        else{
+          throw(responseBody["message"]);
+        }
+      }
+      catch(err){
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+
+  static Future<Map<String,dynamic>> getQuizResponses(String classroomID, String quizID, context) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if(token==null){
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AskRole()), (route) => false);
+    }
+    else{
+      try{
+        var response = await http.get(
+              Uri(
+                  scheme: 'http',
+                  host: hostIP,
+                  port: hostPort,
+                  path: '/teacher/get-quiz-responses',
+                  queryParameters: {'classroom_id': classroomID, 'quiz_id':quizID}
               ),
               headers: {'Authorization': token},
             );

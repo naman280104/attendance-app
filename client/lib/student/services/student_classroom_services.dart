@@ -106,7 +106,7 @@ class StudentClassroomServices {
     return {};
   }
 
-  static Future<Map<String, dynamic>> getAttendanceBeaconIdentifier(context, String classroomID) async {
+  static Future<Map<String, dynamic>> getBeaconIdentifier(context, String classroomID) async {
     FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
     String? token = await secureStorage.readSecureData("token");
     if (token == null) {
@@ -119,7 +119,7 @@ class StudentClassroomServices {
                 scheme: 'http',
                 host: hostIP,
                 port: hostPort,
-                path: '/student/get-attendance-beacon-identifier',
+                path: '/student/get-beacon-identifier',
                 queryParameters: {'classroom_id': classroomID},
             ),
             headers: {'Authorization': token});
@@ -253,6 +253,76 @@ class StudentClassroomServices {
                 path: '/student/respond-to-invite'
             ),
             body: {'invite_id': inviteID, 'student_response': studentResponse},
+            headers: {'Authorization': token});
+
+        if (response.statusCode == 200) {
+          var responseBody = json.decode(response.body);
+          print(responseBody);
+          return responseBody;
+        } else {
+          throw (json.decode(response.body)["message"]);
+        }
+      } catch (err) {
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+  
+  static Future<Map<String, dynamic>> getQuiz(context, String classroomID, String beaconUUID, String advID) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if (token == null) {
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (context) => AskRole()), (route) => false);
+    } else {
+      try {
+        var response = await http.get(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/student/get-quiz',
+                queryParameters: {
+                  'classroom_id': classroomID,
+                  'beacon_UUID': beaconUUID,
+                  'advertisement_id': advID
+                },
+            ),
+            headers: {'Authorization': token});
+
+        if (response.statusCode == 200) {
+          var responseBody = json.decode(response.body);
+          // print(responseBody);
+          return responseBody;
+        } else {
+          throw (json.decode(response.body)["message"]);
+        }
+      } catch (err) {
+        print(err);
+        rethrow;
+      }
+    }
+    return {};
+  }
+
+  static Future<Map<String, dynamic>> submitQuiz(context, String classroomID, String beaconUUID, List<int> studentResponse) async {
+    FlutterSecureStorageClass secureStorage = FlutterSecureStorageClass();
+    String? token = await secureStorage.readSecureData("token");
+    if (token == null) {
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (context) => AskRole()), (route) => false);
+    } else {
+      try {
+        var response = await http.post(
+            Uri(
+                scheme: 'http',
+                host: hostIP,
+                port: hostPort,
+                path: '/student/submit-quiz'
+            ),
+            body: {"classroom_id": classroomID, 'beacon_UUID': beaconUUID, 'student_response': json.encode(studentResponse)},
             headers: {'Authorization': token});
 
         if (response.statusCode == 200) {

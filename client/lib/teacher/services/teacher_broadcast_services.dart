@@ -19,7 +19,7 @@ class TeacherBroadcastServices {
   static const String layout = BeaconBroadcast.ALTBEACON_LAYOUT;
   static const int manufacturerId = 0x004c;
   static const List<int> extraData = [123];
-
+  String _uuidBeingAdvertised = "";
 
 
   TeacherBroadcastServices(Function reloadCallback) {
@@ -54,6 +54,8 @@ class TeacherBroadcastServices {
         .setExtraData(extraData)
         .start();
 
+    _uuidBeingAdvertised = uuidToSet.replaceAll("-", "");
+
     print('Broadcast Button Pressed');
 
     await Future.delayed(Duration(milliseconds: 500));
@@ -87,6 +89,7 @@ class TeacherBroadcastServices {
   }
 
   bool get isAdvertising => _isAdvertising;
+  String get uuidBeingAdvertised => _uuidBeingAdvertised;
   BeaconStatus get isTransmissionSupported => _isTransmissionSupported;
   StreamSubscription<bool> get isAdvertisingSubscription => _isAdvertisingSubscription;
 
