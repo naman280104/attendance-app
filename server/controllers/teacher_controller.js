@@ -4,12 +4,14 @@ const Student = require('../models/student_model');
 const Lecture = require('../models/lecture_model');
 const Attendance = require('../models/attendance_model');
 const Invite = require('../models/invite_model');
+const Quiz = require('../models/quiz_model');
 
 const {createUniqueID, createClassroomCode} = require('../services/uuid');
 
 
 const BEACON_ID_LENGTH = 16; //16 hex digits
 const LECTURE_CODE_LENGTH = 8; //8 hex digits
+const QUIZ_CODE_LENGTH = 8; //8 hex digits
 
 const createClassroom = async (req,res) => {
     // need to apply transactionssssssssss
@@ -280,6 +282,7 @@ const addLecture = async (req,res) => {
         await lecture.save();
         classroom.classroom_lectures.push(lecture);
         await classroom.save();
+        console.log("classroom lecture are is ",classroom.classroom_lectures);
         res.status(200).json({message: 'Lecture added successfully', lecture_id: lecture._id, lecture_code: lecture.lecture_code, lecture_date: lecture.createdAt});
     }
     catch(err){
@@ -728,6 +731,301 @@ const getAttendanceReport = async (req, res) => {
 };
 
 
+const addQuiz = async (req,res) => {
+    try{
+        console.log(req);
+
+        const {classroom_id, quiz_name, no_of_questions} = req.body;
+        const quiz_file = req.file;
+        if(!classroom_id || !quiz_file || !quiz_name || !no_of_questions){
+            return res.status(400).json({message: 'Classroom id, quiz_file, no_of_questions and quiz_name  are required'});
+        }
+        const teacher = await Teacher.findOne({email: req.user.email});
+        if(!teacher){
+            return res.status(404).json({message: 'Teacher not found'});
+        }
+        let classroom_found = false;
+        teacher.classrooms.forEach((classroom) => {
+            if(classroom._id == classroom_id){
+                classroom_found = true;
+            }
+        });
+        console.log("classroom_found is ",classroom_found);
+        if(!classroom_found){
+            return res.status(400).json({message: 'Classroom does not belong to teacher'});
+        }
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        let quiz_code_available = null;
+        while(1){
+            const quiz_code = createUniqueID(QUIZ_CODE_LENGTH);
+            const is_quiz_code_taken = false;
+            classroom.classroom_quizzes.forEach((quiz) => {
+                if(quiz.quiz_code == quiz_code){
+                    is_quiz_code_taken = true;
+                }
+            });
+            console.log("yes");
+            if(!is_quiz_code_taken){
+                quiz_code_available = quiz_code;
+                break;
+            }
+        }
+        console.log("quiz_code_available is ",quiz_code_available);
+        console.log(parseInt(no_of_questions));
+        const quiz = await Quiz.create({
+            quiz_code: quiz_code_available,
+            file_name: quiz_file.filename,
+            file_id: quiz_file.id,
+            no_of_questions: parseInt(no_of_questions),
+            quiz_name: quiz_name
+        });
+        await quiz.save();
+        classroom.classroom_quizzes.push(quiz);
+        console.log("classroom is ",classroom.classroom_quizzes);
+        await classroom.save();
+        res.status(200).json({message: 'quiz added successfully', quiz_id: quiz._id, quiz_code: quiz.quiz_code, quiz_date: quiz.createdAt});
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+
+const removeQuiz = async (req,res) => {
+    try{
+        const mongoose = global.mongoose;
+
+        const {classroom_id, quiz_id} = req.body;
+        console.log(classroom_id, quiz_id);
+        if(!classroom_id || !quiz_id){
+            return res.status(400).json({message: 'Classroom id and quiz id are required'});
+        }
+
+        const teacher = await Teacher.findOne({email: req.user.email});
+        if(!teacher){
+            return res.status(404).json({message: 'Teacher not found'});
+        }
+
+        let classroom_found = false;
+        teacher.classrooms.forEach((classroom) => {
+            if(classroom._id == classroom_id){
+                classroom_found = true;
+            }
+        });
+
+        if(!classroom_found){
+            return res.status(400).json({message: 'Classroom does not belong to teacher'});
+        }
+
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        const quiz = await Quiz.findById(quiz_id);
+        if(!quiz){
+            return res.status(404).json({message: 'Quiz not found'});
+        }
+
+        const quiz_in_classroom = classroom.classroom_quizzes.find((quiz) => quiz._id.toString() == quiz_id);
+        if(!quiz_in_classroom){
+            return res.status(400).json({message: 'Quiz not in classroom'});
+        }
+
+        classroom.classroom_quizzes = classroom.classroom_quizzes.filter((quiz) => quiz._id != quiz_id);
+        const conn = mongoose.connection; // Get the Mongoose connection object
+        const gfs = new mongoose.mongo.GridFSBucket(conn.db, { bucketName: "uploads" }); // Initialize GridFS stream
+        const mongoid = new mongoose.Types.ObjectId(quiz.file_id);
+        await gfs.delete(mongoid);
+        await classroom.save();
+        await Quiz.deleteOne({_id: quiz_id});
+        return res.status(200).json({message: 'Quiz removed successfully'});
+    } catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+
+}
+
+
+const changeQuizState = async (req,res) => {
+    try{
+        const {classroom_id, quiz_id, action} = req.body;
+        console.log(classroom_id, quiz_id);
+        if(!classroom_id || !quiz_id){
+            return res.status(400).json({message: 'Classroom id and quiz id are required'});
+        }
+
+        const teacher = await Teacher.findOne({email: req.user.email});
+        if(!teacher){
+            return res.status(404).json({message: 'Teacher not found'});
+        }
+
+        let classroom_found = false;
+        teacher.classrooms.forEach((classroom) => {
+            if(classroom._id == classroom_id){
+                classroom_found = true;
+            }
+        });
+
+        if(!classroom_found){
+            return res.status(400).json({message: 'Classroom does not belong to teacher'});
+        }
+
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        const quiz = await Quiz.findById(quiz_id);
+        if(!quiz){
+            return res.status(404).json({message: 'Quiz not found'});
+        }
+
+        const quiz_in_classroom = classroom.classroom_quizzes.find((quiz) => quiz._id.toString() == quiz_id);
+        if(!quiz_in_classroom){
+            return res.status(400).json({message: 'Quiz not in classroom'});
+        }
+
+        if(action == 'START'){
+            await Quiz.updateOne({_id: quiz_id}, {is_accepting: true});
+            return res.status(200).json({message: 'Quiz started successfully'});
+        }
+        else if(action == 'STOP'){
+            await Quiz.updateOne({_id: quiz_id}, {is_accepting: false});
+            return res.status(200).json({message: 'Quiz stopped successfully'});
+        }
+        else{
+            return res.status(400).json({message: 'Illegal action'});
+        }
+    } catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+
+const getAllQuizzes = async (req,res) => {
+    try{
+        const {classroom_id} = req.query;
+        if(!classroom_id){
+            return res.status(400).json({message: 'Classroom id is required'});
+        }
+
+        const teacher = await Teacher.findOne({email: req.user.email});
+        if(!teacher){
+            return res.status(404).json({message: 'Teacher not found'});
+        }
+
+        let classroom_found = false;
+        teacher.classrooms.forEach((classroom) => {
+            if(classroom._id == classroom_id){
+                classroom_found = true;
+            }
+        });
+
+        if(!classroom_found){
+            return res.status(400).json({message: 'Classroom does not belong to teacher'});
+        }
+
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        let quizzes = [];
+        for(let i = 0; i < classroom.classroom_quizzes.length; i++){
+            const quiz = await Quiz.findById(classroom.classroom_quizzes[i]);
+            const beacon_UUID = classroom.beacon_id + createUniqueID(32 - BEACON_ID_LENGTH - QUIZ_CODE_LENGTH) + quiz.quiz_code;
+            quizzes.push({
+                quiz_id: quiz._id,
+                quiz_name: quiz.quiz_name,
+                file_name: quiz.file_name,
+                file_id: quiz.file_id,
+                quiz_code: quiz.quiz_code,
+                quiz_date: quiz.createdAt,
+                is_accepting: quiz.is_accepting,
+                beacon_UUID: beacon_UUID,
+                no_of_questions: quiz.no_of_questions,
+            });
+        }
+        console.log(quizzes);
+        return res.status(200).json({quizzes: quizzes});
+    } catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+
+const getQuizResponses = async (req,res) => {
+    try{
+        const {classroom_id,quiz_id} = req.query;
+        if(!classroom_id || !quiz_id){
+            return res.status(400).json({message: 'Quiz id and classroom Id is required'});
+        }
+        const teacher = await Teacher.findOne({email: req.user.email});
+        if(!teacher){
+            return res.status(404).json({message: 'Teacher not found'});
+        }
+        let classroom_found = false;
+        teacher.classrooms.forEach((classroom) => {
+            if(classroom._id == classroom_id){
+                classroom_found = true;
+            }
+        });
+        if(!classroom_found){
+            return res.status(400).json({message: 'Classroom does not belong to teacher'});
+        }
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+        // check  if quiz_id is in classroom_found.classroom_quizzes
+        let quiz_found = false;
+        classroom.classroom_quizzes.forEach((quiz) => {
+            if(quiz == quiz_id){
+                quiz_found = true;
+            }
+        });
+        if(!quiz_found){
+            return res.status(400).json({message: 'Quiz does not belong to classroom'});
+        }
+        const quiz = await Quiz.findById(quiz_id);
+        if(!quiz){
+            return res.status(404).json({message: 'Quiz not found'});
+        }
+
+        const student_ids = Array.from(quiz.student_responses.keys());
+
+        let response_report = {};
+
+        for(let i=0; i<student_ids.length; i++){
+            const student = await Student.findById(student_ids[i]);
+            response_report[student.email] = {
+                name: student.name,
+                roll_no: student.roll_no,
+                response: quiz.student_responses.get(student_ids[i]),
+            };
+        }
+    
+
+        console.log(response_report);
+        return res.status(200).json({ quiz_responses: response_report, no_of_questions: quiz.no_of_questions });
+        
+    } catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+
+
+}
+
 
 module.exports = {
     createClassroom,
@@ -742,5 +1040,10 @@ module.exports = {
     sendInvites,
     addAttendanceByEmail,
     removeStudent,
-    getAttendanceReport
+    getAttendanceReport,
+    addQuiz,
+    removeQuiz,
+    changeQuizState,
+    getAllQuizzes,
+    getQuizResponses
 };

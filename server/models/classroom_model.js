@@ -37,6 +37,12 @@ const ClassroomSchema = new mongoose.Schema(
             ref: "Teacher",
             required: true
         },
+        classroom_quizzes: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Quiz",
+            }
+        ],
     },
     {
         timestamps: true,

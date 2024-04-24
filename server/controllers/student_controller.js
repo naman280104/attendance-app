@@ -4,10 +4,12 @@ const Classroom = require('../models/classroom_model');
 const Lecture = require('../models/lecture_model');
 const Attendance = require('../models/attendance_model');
 const Invite = require('../models/invite_model');
+const Quiz = require('../models/quiz_model');
 
 
 const BEACON_ID_LENGTH = 16; //16 hex digits
 const LECTURE_CODE_LENGTH = 8; //8 hex digits
+const QUIZ_CODE_LENGTH = 8; //8 hex digits
 
 const getAllClassrooms = async (req,res) => {
     
@@ -50,7 +52,6 @@ const joinClassroomByCode = async (req,res) => {
     try{
         const {classroom_code} = req.body;
         const {email} = req.user;
-
         const classroom = await Classroom.findOne({classroom_code});
 
         if(!classroom){
@@ -126,7 +127,7 @@ const unenroll = async (req,res) => {
 
 
 
-const getAttendanceBeaconIdentifier = async (req, res) => {
+const getBeaconIdentifier = async (req, res) => {
     try{
         const {classroom_id} = req.query;
         const student = await Student.findOne({email: req.user.email});
@@ -387,4 +388,163 @@ const respondToInvite = async (req,res) => {
 }
 
 
-module.exports = {getAllClassrooms, joinClassroomByCode, unenroll, getMyAttendance, markLiveAttendance, getAttendanceBeaconIdentifier, getInvites, respondToInvite};
+const getQuiz = async (req,res) => {
+    try{
+        const {classroom_id, beacon_UUID, advertisement_id} = req.query;
+        console.log(classroom_id, beacon_UUID, advertisement_id);
+        if(!classroom_id || !beacon_UUID || !advertisement_id){
+            return res.status(400).json({message: 'classroom id, adv id and beacon uuid are required'});
+        }
+        const student = await Student.findOne({email: req.user.email});
+        if(!student){
+            return res.status(404).json({message: 'Student not found'});
+        }
+        
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        const student_ids = Array.from(classroom.classroom_students.keys())
+        // console.log(student_ids, student._id);
+        if(!student_ids.includes(student._id.toString())){
+            return res.status(400).json({message: 'Student not in classroom'});
+        }
+
+        const un_formatted_UUID = beacon_UUID.replace(/-/g, '');
+        const received_quiz_code = un_formatted_UUID.slice(-1 * QUIZ_CODE_LENGTH);
+        const received_classroom_beacon_id = un_formatted_UUID.slice(0,BEACON_ID_LENGTH);
+        
+        // console.log(received_classroom_beacon_id.length ,classroom.beacon_id.length);
+        // console.log(received_classroom_beacon_id == classroom.beacon_id);
+
+        if(received_classroom_beacon_id != classroom.beacon_id){
+            // console.log("not equal")
+            return res.status(400).json({message: 'Wrong Beacon UUID'});
+        }
+
+        let quiz_found = false;
+        console.log(received_quiz_code);
+
+        for(let i=0; i<classroom.classroom_quizzes.length; i++){
+            const quiz = await Quiz.findById(classroom.classroom_quizzes[i]);
+            console.log(i, quiz.quiz_code);
+            if(quiz.quiz_code == received_quiz_code){
+                quiz_found = true;
+                if(!(quiz.is_accepting)){
+                    return res.status(400).json({message: 'Quiz not accepting responses'});
+                }
+                
+                const mongoose = global.mongoose;
+                const conn = mongoose.connection; // Get the Mongoose connection object
+                const gfs = new mongoose.mongo.GridFSBucket(conn.db, { bucketName: "uploads" }); // Initialize GridFS stream
+                const mongoid = new mongoose.Types.ObjectId(quiz.file_id);
+                const downloadStream = gfs.openDownloadStream(mongoid);
+                let fileBuffer = Buffer.alloc(0);
+
+                downloadStream.on('data', (chunk) => {
+                    fileBuffer = Buffer.concat([fileBuffer, chunk]);
+                });
+
+                downloadStream.on('error', (err) => {
+                    console.error('Error downloading file:', err);
+                    return res.status(500).json({ error: 'Internal server error' });
+                });
+
+                downloadStream.on('end', () => {
+                    const data = Array.from(fileBuffer); // Convert buffer to array of bytes
+                    res.status(200).json({ data: data, no_of_questions: quiz.no_of_questions}); // Send byte array as response
+                    delete data;
+                });
+                delete fileBuffer;
+                return;
+            }
+        }
+        
+        if(!quiz_found){
+            return res.status(400).json({message: 'Wrong Beacon UUID'});
+        }
+
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+
+const submitQuiz = async (req,res) => {
+    try{
+        const {classroom_id, beacon_UUID} = req.body;
+        let student_response = JSON.parse(req.body.student_response);
+        console.log(classroom_id, beacon_UUID, student_response);
+        if(!classroom_id || !beacon_UUID || !student_response){
+            return res.status(400).json({message: 'classroom id, quiz code and student response are required'});
+        }
+        const student = await Student.findOne({email: req.user.email});
+        if(!student){
+            return res.status(404).json({message: 'Student not found'});
+        }
+        
+        const classroom = await Classroom.findById(classroom_id);
+        if(!classroom){
+            return res.status(404).json({message: 'Classroom not found'});
+        }
+
+        const student_ids = Array.from(classroom.classroom_students.keys())
+        // console.log(student_ids, student._id);
+        if(!student_ids.includes(student._id.toString())){
+            return res.status(400).json({message: 'Student not in classroom'});
+        }
+
+        let quiz_found = false;
+        const quiz_code = beacon_UUID.slice(-1 * QUIZ_CODE_LENGTH);
+        console.log(quiz_code);
+        for(let i=0; i<classroom.classroom_quizzes.length; i++){
+            const quiz = await Quiz.findById(classroom.classroom_quizzes[i]);
+            console.log(i, quiz.quiz_code);
+            if(quiz.quiz_code == quiz_code){
+                quiz_found = true;
+                if(!(quiz.is_accepting)){
+                    return res.status(400).json({message: 'Quiz not accepting responses'});
+                }
+                
+                const student_ids = Array.from(quiz.student_responses.keys())
+                // console.log(student_ids, student._id);
+                if(student_ids.includes(student._id.toString())){
+                    return res.status(400).json({message: 'Already responded'});
+                }
+                quiz.student_responses.set(student._id, student_response);                
+                await quiz.save();
+
+                return res.status(200).json({message: 'Quiz submitted successfully'});
+            }
+        }
+        
+        if(!quiz_found){
+            return res.status(400).json({message: 'Wrong Quiz Code'});
+        }
+
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+
+
+
+module.exports = {
+    getAllClassrooms,
+    joinClassroomByCode,
+    unenroll,
+    getMyAttendance,
+    markLiveAttendance,
+    getBeaconIdentifier,
+    getInvites,
+    respondToInvite,
+    getQuiz,
+    submitQuiz
+};
+
